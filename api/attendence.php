@@ -85,6 +85,7 @@ function readAllAttendences($api_token)
                         intval($curr_event_id) => $event_arr
                     );
                     array_push($attendence_arr, $ev);
+                    $curr_event_id = $event_id;
                     $event_arr = array();
                     $att_item = array(
                         "Member_ID"  => $member_id,
