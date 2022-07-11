@@ -60,7 +60,52 @@ function readAllAttendences($api_token)
     $query = "SELECT viewCrossMemberEvents.member_id, viewCrossMemberEvents.event_id, attendence FROM viewCrossMemberEvents LEFT JOIN tblAttendence ON viewCrossMemberEvents.member_id=tblAttendence.member_id AND viewCrossMemberEvents.event_id=tblAttendence.event_id WHERE viewCrossMemberEvents.date > :_now ORDER BY viewCrossMemberEvents.event_id, viewCrossMemberEvents.member_id";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(':_now', date('Y-m-d'));
-    
+
+    if($statement->execute()){
+        $attendence_arr = array();
+        if($row = $statement->fetch(PDO::FETCH_ASSOC)){
+            extract($row);
+            $curr_event_id = intval($event_id);
+            $event_arr = array();
+            $att_item = array(
+                "Member_ID"  => $member_id,
+                "Attendence" => ($attendence == NULL) ? -1 : intval($attendence)
+            );
+            array_push($event_arr, $att_item);
+            while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+                extract($row);
+                if($curr_event_id == $event_id){
+                    $att_item = array(
+                        "Member_ID"  => $member_id,
+                        "Attendence" => ($attendence == NULL) ? -1 : intval($attendence)
+                    );
+                    array_push($event_arr, $att_item);
+                } else {
+                    $ev = array(
+                        intval($curr_event_id) => $event_arr
+                    );
+                    array_push($attendence_arr, $ev);
+                    $event_arr = array();
+                    $att_item = array(
+                        "Member_ID"  => $member_id,
+                        "Attendence" => ($attendence == NULL) ? -1 : intval($attendence)
+                    );
+                    array_push($event_arr, $att_item);
+                }
+            }
+
+            $ev = array(
+                intval($curr_event_id) => $event_arr
+            );
+            array_push($attendence_arr, $ev);
+
+            response_with_data(200, $attendence_arr);
+        } else {
+            http_response_code(404);
+        }
+        exit();
+    }
+    /*
     if($statement->execute()){
         $attendence_arr = array();
         while($row = $statement->fetch(PDO::FETCH_ASSOC)) {
@@ -77,7 +122,7 @@ function readAllAttendences($api_token)
     } else {
         http_response_code(500);
         exit();
-    }
+    }*/
 }
 
 function updateAttendence($api_token, $changes)
