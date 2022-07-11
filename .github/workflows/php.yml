@@ -1,0 +1,27 @@
+name: PHP Composer
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+
+  upload:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Get Files
+        uses: actions/checkout@v3
+      - name: Upload API files
+        uses: SamKirkland/FTP-Deploy-Action@4.3.0
+        with:
+          server: spzroenkhausen.bplaced.net
+          username: spzroenkhausen_admin
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./api/
+          server-dir: ./www/api/
