@@ -47,6 +47,6 @@ jobs:
         with:
           server: spzroenkhausen.bplaced.net
           username: spzroenkhausen_admin
-          password: ${{ secrets.FPT_PASSWORD }}
+          password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./api/
           server-dir: ./www/api/
