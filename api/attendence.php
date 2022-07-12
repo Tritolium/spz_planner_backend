@@ -97,7 +97,8 @@ function readAllAttendences($api_token)
             }
 
             $ev = array(
-                intval($curr_event_id) => $event_arr
+                "Event_ID" => intval($curr_event_id),
+                "Attendences" => $event_arr
             );
             array_push($attendence_arr, $ev);
 
