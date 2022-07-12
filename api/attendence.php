@@ -68,6 +68,7 @@ function readAllAttendences($api_token)
             $curr_event_id = intval($event_id);
             $event_arr = array();
             $att_item = array(
+                "Fullname" => $forename . " " . $surname,
                 "Member_ID"  => $member_id,
                 "Attendence" => ($attendence == NULL) ? -1 : intval($attendence)
             );
@@ -76,6 +77,7 @@ function readAllAttendences($api_token)
                 extract($row);
                 if($curr_event_id == $event_id){
                     $att_item = array(
+                        "Fullname" => $forename . " " . $surname,
                         "Member_ID"  => $member_id,
                         "Attendence" => ($attendence == NULL) ? -1 : intval($attendence)
                     );
@@ -89,6 +91,7 @@ function readAllAttendences($api_token)
                     $curr_event_id = $event_id;
                     $event_arr = array();
                     $att_item = array(
+                        "Fullname" => $forename . " " . $surname,
                         "Member_ID"  => $member_id,
                         "Attendence" => ($attendence == NULL) ? -1 : intval($attendence)
                     );
