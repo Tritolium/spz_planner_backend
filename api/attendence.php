@@ -57,7 +57,7 @@ function readAllAttendences($api_token)
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT viewCrossMemberEvents.member_id, viewCrossMemberEvents.event_id, attendence FROM viewCrossMemberEvents LEFT JOIN tblAttendence ON viewCrossMemberEvents.member_id=tblAttendence.member_id AND viewCrossMemberEvents.event_id=tblAttendence.event_id WHERE viewCrossMemberEvents.date > :_now ORDER BY viewCrossMemberEvents.event_id, viewCrossMemberEvents.member_id";
+    $query = "SELECT viewCrossMemberEvents.event_id, viewCrossMemberEvents.type, viewCrossMemberEvents.location, forename, surname, attendence, date FROM viewCrossMemberEvents LEFT JOIN tblAttendence ON viewCrossMemberEvents.member_id=tblAttendence.member_id AND viewCrossMemberEvents.event_id=tblAttendence.event_id WHERE date > :_now";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(':_now', date('Y-m-d'));
     
@@ -69,30 +69,30 @@ function readAllAttendences($api_token)
             $event_arr = array();
             $att_item = array(
                 "Fullname" => $forename . " " . $surname,
-                "Member_ID"  => $member_id,
                 "Attendence" => ($attendence == NULL) ? -1 : intval($attendence)
             );
             array_push($event_arr, $att_item);
             while($row = $statement->fetch(PDO::FETCH_ASSOC)){
-                extract($row);
-                if($curr_event_id == $event_id){
+                if($curr_event_id == $row['event_id']){
+                    extract($row);
                     $att_item = array(
                         "Fullname" => $forename . " " . $surname,
-                        "Member_ID"  => $member_id,
                         "Attendence" => ($attendence == NULL) ? -1 : intval($attendence)
                     );
                     array_push($event_arr, $att_item);
                 } else {
                     $ev = array(
-                        "Event_ID" => intval($curr_event_id),
+                        "Type" => $type,
+                        "Location" => $location,
+                        "Date" => $date,
                         "Attendences" => $event_arr
                     );
                     array_push($attendence_arr, $ev);
+                    extract($row);
                     $curr_event_id = $event_id;
                     $event_arr = array();
                     $att_item = array(
                         "Fullname" => $forename . " " . $surname,
-                        "Member_ID"  => $member_id,
                         "Attendence" => ($attendence == NULL) ? -1 : intval($attendence)
                     );
                     array_push($event_arr, $att_item);
@@ -100,7 +100,9 @@ function readAllAttendences($api_token)
             }
 
             $ev = array(
-                "Event_ID" => intval($curr_event_id),
+                "Type" => $type,
+                "Location" => $location,
+                "Date" => $date,
                 "Attendences" => $event_arr
             );
             array_push($attendence_arr, $ev);
