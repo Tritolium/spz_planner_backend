@@ -6,6 +6,8 @@ if(!isset($_GET['api_token'])){
     exit();
 }
 
+header("Content-Type: application/json");
+
 $data = json_decode(file_get_contents("php://input"));
 
 switch($_SERVER['REQUEST_METHOD']){
@@ -13,7 +15,11 @@ case 'GET':
     if(isset($_GET['all'])){
         readAllAttendences($_GET['api_token']);
     } else {
-        readAttendence($_GET['api_token']);
+        if (isset($_GET['missing'])){
+            readMissingAttendences();
+        } else {
+            readAttendence($_GET['api_token']);
+        }
     }    
     break;
 case 'PUT':
@@ -181,12 +187,12 @@ function updateSingleAttendence($db_conn, $member_id, $event_id, $attendence)
     $statement->execute();
 }
 
-function getMissingAttendences()
+function readMissingAttendences()
 {
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT * FROM viewMissingAttendences";
+    $query = "SELECT * FROM viewMissingAttendence";
 
     $statement = $db_conn->prepare($query);
 
@@ -203,8 +209,8 @@ function getMissingAttendences()
                 "FirstMissing" => $type . " " . $location
             );
             array_push($attendences, $missing);
-            response_with_data(200, $attendences);
         }
+        response_with_data(200, $attendences);
     }
     exit();
 }
