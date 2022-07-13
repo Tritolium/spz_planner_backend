@@ -180,3 +180,31 @@ function updateSingleAttendence($db_conn, $member_id, $event_id, $attendence)
     
     $statement->execute();
 }
+
+function getMissingAttendences()
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT * FROM viewMissingAttendences";
+
+    $statement = $db_conn->prepare($query);
+
+    $statement->execute();
+    if($statement->rowCount() < 1){
+        http_response_code(204);
+    } else {
+        $attendences = array();
+        while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+            extract($row);
+            $missing = array(
+                "Forename" => $forename,
+                "Surname"  => $surname,
+                "FirstMissing" => $type . " " . $location
+            );
+            array_push($attendences, $missing);
+            response_with_data(200, $attendences);
+        }
+    }
+    exit();
+}
