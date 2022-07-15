@@ -23,6 +23,10 @@ case 'GET':
     }    
     break;
 case 'PUT':
+    if(isset($_GET['single'])){
+        updateSingleAttendence($data->Member_ID, $data->Event_ID, $data->Attendence);
+        exit();
+    }
     updateAttendence($_GET['api_token'], $data);
     break;
 }
@@ -154,7 +158,7 @@ function updateAttendence($api_token, $changes)
         $row = $statement->fetch(PDO::FETCH_ASSOC);
         extract($row);
         foreach($changes as $event_id => $attendence){
-            updateSingleAttendence($db_conn, $member_id, $event_id, $attendence);
+            updateSingleAttendence($member_id, $event_id, $attendence);
         }
         http_response_code(200);
     } else {
@@ -163,8 +167,10 @@ function updateAttendence($api_token, $changes)
     }
 }
 
-function updateSingleAttendence($db_conn, $member_id, $event_id, $attendence)
+function updateSingleAttendence($member_id, $event_id, $attendence)
 {
+    $database = new Database();
+    $db_conn = $database->getConnection();
     $query = "SELECT * FROM tblAttendence WHERE member_id=:member_id AND event_id=:event_id";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":member_id", $member_id);
