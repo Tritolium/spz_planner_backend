@@ -9,6 +9,7 @@ if(!isset($_GET['api_token'])){
 
 switch($_SERVER['REQUEST_METHOD']){
 case 'GET':
+    header("Content-Type: application/json");
     // if id is given in querry
     if(isset($_GET['id'])){
         // read single absence, api-token for validation
@@ -29,7 +30,7 @@ case 'GET':
     break;
 case 'POST':
     $data = json_decode(file_get_contents("php://input"));
-    if(newAbsence($data)){
+    if(newAbsence($_GET['api_token'], $data)){
         http_response_code(201);
     } else {
         http_response_code(500);
@@ -59,11 +60,11 @@ function newAbsence($api_token, $data)
     $query = "SELECT member_id FROM tblMembers WHERE api_token=:api_token";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":api_token", $api_token);
-    if(!$statement->execute || $statement->rowCount() < 1){
+    if(!$statement->execute() || $statement->rowCount() < 1){
         return false;
     }
     $row = $statement->fetch(PDO::FETCH_ASSOC);
-    $member_id = $row->member_id;
+    $member_id = $row['member_id'];
 
     $query = "INSERT INTO tblAbsence (member_id, from_date, until_date, info) VALUES (:member_id, :from_date, :until_date, :info)";
     $statement = $db_conn->prepare($query);
@@ -100,7 +101,7 @@ function readSingleAbsence($api_token, $id)
         http_resonse_code(204);
         exit();
     }
-    $row = $statement->fetch(PDO::FETCH_ASSOC)
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
     extract($row);
     $absence = array(
         "Absence_ID"    => intval($absence_id),
@@ -154,7 +155,7 @@ function readOwnAbsences($api_token, $filter)
         $statement->bindValue(":member_id", $member_id);
         break;
     case 'past':
-        $query = "SELECT * FROM tblAbsence WHERE (from_data < :today AND  until_date < :today) AND member_id=:member_id";
+        $query = "SELECT * FROM tblAbsence WHERE (from_date < :today AND  until_date < :today) AND member_id=:member_id";
         $statement = $db_conn->prepare($query);
         $statement->bindValue(":today", date("Y-m-d"));
         $statement->bindValue(":member_id", $member_id);
@@ -201,7 +202,7 @@ function readAllAbsences($api_token, $filter)
         $statement->bindValue(":today", date("Y-m-d"));
         break;
     case 'past':
-        $query = "SELECT * FROM tblAbsence WHERE (from_data < :today AND  until_date < :today)";
+        $query = "SELECT * FROM tblAbsence WHERE (from_date < :today AND  until_date < :today)";
         $statement = $db_conn->prepare($query);
         $statement->bindValue(":today", date("Y-m-d"));
         break;
@@ -233,17 +234,18 @@ function readAllAbsences($api_token, $filter)
 
 function updateAbsence($api_token, $data)
 {
-    if(!authorizeAlterAbsence($api_token, $data->id)){
+    if(!authorizeAlterAbsence($api_token, $data->Absence_ID)){
         http_response_code(401);
         exit();
     }
     $database = new Database();
     $db_conn = $database->getConnection();
-    $query = "UPDATE tblAttendence SET from_date=:from_date, until_date=:until_date WHERE absence_id=:id";
+    $query = "UPDATE tblAbsence SET from_date=:from_date, until_date=:until_date WHERE absence_id=:id";
     $statement = $db_conn->prepare($query);
+    $statement->bindParam(":id", $data->Absence_ID);
     $statement->bindParam(":from_date", $data->From);
     $statement->bindParam(":until_date", $data->Until);
-    if($statement->execute){
+    if($statement->execute()){
         return true;
     } else {
         return false;
@@ -279,7 +281,7 @@ function authorizeAlterAbsence($api_token, $id)
     $statement->bindParam(":member_id", $member_id);
 
     if(!$statement->execute()){
-       return false
+       return false;
     }
     if($statement->rowCount() == 1){
         return true;
