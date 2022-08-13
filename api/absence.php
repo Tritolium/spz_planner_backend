@@ -76,8 +76,7 @@ function newAbsence($api_token, $data)
     if($statement->execute()){
         return true;
     }
-        return false;
-    }
+    return false;
 
     // check for events in this period
     $query = "SELECT event_id FROM tblEvents WHERE date >= :from_date AND date <= :until_date";
