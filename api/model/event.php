@@ -1,4 +1,6 @@
 <?php
+include_once './attendence.php';
+
 class Event {
     private $conn;
     private $table_name = "spzroenkhausen_planer.tblEvents";
@@ -78,11 +80,28 @@ class Event {
         $stmt->bindParam(":departure", $event_data->Departure);
         $stmt->bindParam(":leave_dep", $event_data->Leave_dep);
 
-        if($stmt->execute()){
-            return true;
+        if(!$stmt->execute()){
+            return false;
         }
 
-        return false;
+        $event_id = $this->conn->lastInsertId();
+
+        $query = "SELECT member_id FROM tblAbsence WHERE from_date <= :event_date AND until_date >= :event_date";
+        $statement = $this->conn->prepare($query);
+        $statement->bindParam(":event_date", $event_data->Date);
+        $statement->execute();
+        
+        $members = array();
+
+        while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+            array_push($members, $row['member_id']);
+        }
+
+        for($i; $i < $members->length(); $i++){
+            updateSingleAttendence($members[$i], $event_id, 0);
+        }
+
+        return true;
     }
 }
 ?>

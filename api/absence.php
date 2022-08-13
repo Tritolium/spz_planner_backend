@@ -1,5 +1,6 @@
 <?php
 include_once './config/database.php';
+include_once './attendence.php';
 
 // checks if authorization is given, no validation
 if(!isset($_GET['api_token'])){
@@ -75,7 +76,27 @@ function newAbsence($api_token, $data)
     if($statement->execute()){
         return true;
     }
-    return false;
+        return false;
+    }
+
+    // check for events in this period
+    $query = "SELECT event_id FROM tblEvents WHERE date >= :from_date AND date <= :until_date";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":from_date", $data->From);
+    $statement->bindParam(":from_date", $data->Until);
+    $statement->execute();
+
+    $events = array();
+
+    while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+        array_push($events, $row['event_id']);
+    }
+
+    for($i = 0; $i < $events->length(); $i++){
+        updateSingleAttendence($member_id, $events[$i], 0);
+    }
+
+    return true;
 }
 
 function readSingleAbsence($api_token, $id)
