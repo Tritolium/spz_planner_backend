@@ -46,6 +46,18 @@ case 'PUT':
         http_response_code(500);
     }
     exit();
+    break;
+case 'DELETE':
+    if(!isset($_GET['id'])){
+        http_response_code(400);
+        exit();
+    }
+    if(deleteAbsence($_GET['api_token'], $_GET['id'])){
+        http_response_code(204);
+    } else {
+        http_response_code(500);
+    }
+    break;
 default:
     // exit with code 501 - not implemented, if none of the given Methods above is requested
     http_response_code(501);
@@ -156,11 +168,6 @@ function readOwnAbsences($api_token, $filter)
     }
     $row = $statement->fetch(PDO::FETCH_ASSOC);
     extract($row);
-    
-    if($auth_level < 3){
-        http_response_code(401);
-        return true;
-    }
 
     switch($filter){
     case 'all':
@@ -283,6 +290,25 @@ function updateAbsence($api_token, $absence_id, $data)
 
     for($i = 0; $i < count($events); $i++){
         updateSingleAttendence($data->Member_ID, $events[$i], 0);
+    }
+
+    return true;
+}
+
+function deleteAbsence($api_token, $absence_id)
+{
+    if(!authorizeAlterAbsence($api_token, $absence_id)){
+        http_response_code(401);
+        exit();
+    }
+    $database = new Database();
+    $conn = $database->getConnection();
+    $query = "DELETE FROM tblAbsence WHERE absence_id = :absence_id";
+    $statement = $conn->prepare($query);
+    $statement->bindParam(":absence_id", $absence_id);
+
+    if(!$statement->execute()){
+        return false;
     }
 
     return true;
