@@ -1,6 +1,5 @@
 <?php
 include_once './config/database.php';
-include_once './attendence.php';
 
 // checks if authorization is given, no validation
 if(!isset($_GET['api_token'])){
@@ -37,10 +36,11 @@ case 'POST':
         http_response_code(500);
     }
     exit();
+    break;
 case 'PUT':
     // Update resource, get request body for data
     $data = json_decode(file_get_contents("php://input"));
-    if(updateAbsence($_GET['api_token'], $data)){
+    if(updateAbsence($_GET['api_token'], $_GET['id'], $data)){
         http_response_code(200);
     } else {
         http_response_code(500);
@@ -50,6 +50,7 @@ default:
     // exit with code 501 - not implemented, if none of the given Methods above is requested
     http_response_code(501);
     exit();
+    break;
 }
 
 function newAbsence($api_token, $data)
@@ -66,23 +67,21 @@ function newAbsence($api_token, $data)
     }
     $row = $statement->fetch(PDO::FETCH_ASSOC);
     $member_id = $row['member_id'];
-
     $query = "INSERT INTO tblAbsence (member_id, from_date, until_date, info) VALUES (:member_id, :from_date, :until_date, :info)";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":member_id", $member_id);
     $statement->bindParam(":from_date", $data->From);
     $statement->bindParam(":until_date", $data->Until);
     $statement->bindParam(":info", $data->Info);
-    if($statement->execute()){
-        return true;
+    if(!$statement->execute()){
+        return false;
     }
-    return false;
 
     // check for events in this period
     $query = "SELECT event_id FROM tblEvents WHERE date >= :from_date AND date <= :until_date";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":from_date", $data->From);
-    $statement->bindParam(":from_date", $data->Until);
+    $statement->bindParam(":until_date", $data->Until);
     $statement->execute();
 
     $events = array();
@@ -91,7 +90,7 @@ function newAbsence($api_token, $data)
         array_push($events, $row['event_id']);
     }
 
-    for($i = 0; $i < $events->length(); $i++){
+    for($i = 0; $i < count($events); $i++){
         updateSingleAttendence($member_id, $events[$i], 0);
     }
 
@@ -118,7 +117,7 @@ function readSingleAbsence($api_token, $id)
         exit();
     }
     if($statement->rowCount() < 1){
-        http_resonse_code(204);
+        http_response_code(204);
         exit();
     }
     $row = $statement->fetch(PDO::FETCH_ASSOC);
@@ -165,17 +164,17 @@ function readOwnAbsences($api_token, $filter)
 
     switch($filter){
     case 'all':
-        $query = "SELECT * FROM tblAbsence";
+        $query = "SELECT * FROM tblAbsence ORDER BY from_date, until_date";
         $statement = $db_conn->prepare($query);
         break;
     case 'current':
-        $query = "SELECT * FROM tblAbsence WHERE (from_date >= :today OR until_date >= :today) AND member_id=:member_id";
+        $query = "SELECT * FROM tblAbsence WHERE (from_date >= :today OR until_date >= :today) AND member_id=:member_id ORDER BY from_date, until_date";
         $statement = $db_conn->prepare($query);
         $statement->bindValue(":today", date("Y-m-d"));
         $statement->bindValue(":member_id", $member_id);
         break;
     case 'past':
-        $query = "SELECT * FROM tblAbsence WHERE (from_date < :today AND  until_date < :today) AND member_id=:member_id";
+        $query = "SELECT * FROM tblAbsence WHERE (from_date < :today AND  until_date < :today) AND member_id=:member_id ORDER BY from_date, until_date";
         $statement = $db_conn->prepare($query);
         $statement->bindValue(":today", date("Y-m-d"));
         $statement->bindValue(":member_id", $member_id);
@@ -252,9 +251,9 @@ function readAllAbsences($api_token, $filter)
     return true;
 }
 
-function updateAbsence($api_token, $data)
+function updateAbsence($api_token, $absence_id, $data)
 {
-    if(!authorizeAlterAbsence($api_token, $data->Absence_ID)){
+    if(!authorizeAlterAbsence($api_token, $absence_id)){
         http_response_code(401);
         exit();
     }
@@ -262,14 +261,31 @@ function updateAbsence($api_token, $data)
     $db_conn = $database->getConnection();
     $query = "UPDATE tblAbsence SET from_date=:from_date, until_date=:until_date WHERE absence_id=:id";
     $statement = $db_conn->prepare($query);
-    $statement->bindParam(":id", $data->Absence_ID);
+    $statement->bindParam(":id", $absence_id);
     $statement->bindParam(":from_date", $data->From);
     $statement->bindParam(":until_date", $data->Until);
-    if($statement->execute()){
-        return true;
-    } else {
+    if(!$statement->execute()){
         return false;
     }
+
+    // check for events in this period
+    $query = "SELECT event_id FROM tblEvents WHERE date >= :from_date AND date <= :until_date";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":from_date", $data->From);
+    $statement->bindParam(":until_date", $data->Until);
+    $statement->execute();
+
+    $events = array();
+
+    while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+        array_push($events, $row['event_id']);
+    }
+
+    for($i = 0; $i < count($events); $i++){
+        updateSingleAttendence($data->Member_ID, $events[$i], 0);
+    }
+
+    return true;
 }
 
 function authorizeAlterAbsence($api_token, $id)
@@ -309,4 +325,30 @@ function authorizeAlterAbsence($api_token, $id)
 
     //false
     return false;
+}
+
+function updateSingleAttendence($member_id, $event_id, $attendence)
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+    $query = "SELECT * FROM tblAttendence WHERE member_id=:member_id AND event_id=:event_id";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":member_id", $member_id);
+    $statement->bindParam(":event_id", $event_id);
+    $statement->execute();
+    if($statement->rowCount() < 1){
+        $query = "INSERT INTO tblAttendence (attendence, member_id, event_id) VALUES (:attendence, :member_id, :event_id)";
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(":attendence", $attendence);
+        $statement->bindParam(":member_id", $member_id);
+        $statement->bindParam(":event_id", $event_id);
+    } else {
+        $query = "UPDATE tblAttendence SET attendence=:attendence WHERE member_id=:member_id AND event_id=:event_id";
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(":attendence", $attendence);
+        $statement->bindParam(":member_id", $member_id);
+        $statement->bindParam(":event_id", $event_id);
+    }
+    
+    $statement->execute();
 }

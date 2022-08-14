@@ -1,6 +1,4 @@
 <?php
-include_once './attendence.php';
-
 class Event {
     private $conn;
     private $table_name = "spzroenkhausen_planer.tblEvents";
@@ -97,11 +95,37 @@ class Event {
             array_push($members, $row['member_id']);
         }
 
-        for($i; $i < $members->length(); $i++){
+        for($i; $i < count($members); $i++){
             updateSingleAttendence($members[$i], $event_id, 0);
         }
 
         return true;
     }
+}
+
+function updateSingleAttendence($member_id, $event_id, $attendence)
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+    $query = "SELECT * FROM tblAttendence WHERE member_id=:member_id AND event_id=:event_id";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":member_id", $member_id);
+    $statement->bindParam(":event_id", $event_id);
+    $statement->execute();
+    if($statement->rowCount() < 1){
+        $query = "INSERT INTO tblAttendence (attendence, member_id, event_id) VALUES (:attendence, :member_id, :event_id)";
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(":attendence", $attendence);
+        $statement->bindParam(":member_id", $member_id);
+        $statement->bindParam(":event_id", $event_id);
+    } else {
+        $query = "UPDATE tblAttendence SET attendence=:attendence WHERE member_id=:member_id AND event_id=:event_id";
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(":attendence", $attendence);
+        $statement->bindParam(":member_id", $member_id);
+        $statement->bindParam(":event_id", $event_id);
+    }
+    
+    $statement->execute();
 }
 ?>
