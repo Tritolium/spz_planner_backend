@@ -42,6 +42,8 @@ function getEventEval()
         $maybe = getEventMaybeCount($event_item[0]);
         $missing = getEventMissingCount($event_item[0]);
 
+        $instruments = getEventInstruments($event_item[0]);
+
         $event = array(
             "Event_ID" => intval($event_item[0]),
             "Type"     => $event_item[1],
@@ -50,7 +52,8 @@ function getEventEval()
             "Consent"  => $consent,
             "Refusal"  => $refusal,
             "Maybe"    => $maybe,
-            "Missing"  => $missing
+            "Missing"  => $missing,
+            "Instruments" => $instruments
         );
 
         array_push($eval, $event);
@@ -109,6 +112,80 @@ function getEventmissingCount($event_id)
     $statement->execute();
     $row = $statement->fetch(PDO::FETCH_ASSOC);
     return $row["missing"];
+}
+
+function getEventInstruments($event_id)
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT COUNT(instrument) FROM tblAttendence LEFT JOIN tblMembers ON tblAttendence.member_id=tblMembers.member_id WHERE event_id = :event_id AND attendence = 1 AND instrument=:instrument";
+    
+    //sopran
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
+    $statement->bindValue(":instrument", "sopran");
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    $sopran = $row['instrument'];
+
+    //alt
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
+    $statement->bindValue(":instrument", "alt");
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    $alt = $row['instrument'];
+
+    //tenor
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
+    $statement->bindValue(":instrument", "tenor");
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    $tenor = $row['instrument'];
+
+    //trommel
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
+    $statement->bindValue(":instrument", "trommel");
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    $trommel = $row['instrument'];
+
+    //becken
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
+    $statement->bindValue(":instrument", "becken");
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    $becken = $row['instrument'];
+
+    //pauke
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
+    $statement->bindValue(":instrument", "pauke");
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    $pauke = $row['instrument'];
+
+    //lyra
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
+    $statement->bindValue(":instrument", "lyra");
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    $lyra = $row['instrument'];
+
+    return array(
+        "Sopran"    => $sopran,
+        "Alt"       => $alt,
+        "Tenor"     => $tenor,
+        "Trommel"   => $trommel,
+        "Becken"    => $becken,
+        "Pauke"     => $pauke,
+        "Lyra"      => $lyra
+    );
 }
 
 ?>
