@@ -119,7 +119,7 @@ function getEventInstruments($event_id)
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT COUNT(instrument) FROM tblAttendence LEFT JOIN tblMembers ON tblAttendence.member_id=tblMembers.member_id WHERE event_id = :event_id AND attendence = 1 AND instrument=:instrument";
+    $query = "SELECT COUNT(instrument) AS instrument FROM tblAttendence LEFT JOIN tblMembers ON tblAttendence.member_id=tblMembers.member_id WHERE event_id = :event_id AND attendence = 1 AND instrument=:instrument";
     
     //sopran
     $statement = $db_conn->prepare($query);
