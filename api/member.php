@@ -59,7 +59,8 @@ switch($_SERVER['REQUEST_METHOD'])
                     "Forename"  => $forename,
                     "Surname"   => $surname,
                     "Nicknames" => $nicknames,
-                    "Auth_level" => $auth_level
+                    "Auth_level" => $auth_level,
+                    "Instrument" => $instrument
                 );
                 response_with_data(200, $member);
                 break;
@@ -80,7 +81,8 @@ switch($_SERVER['REQUEST_METHOD'])
                         "Member_ID"        => $member_id,
                         "Forename"  => $forename,
                         "Surname"   => $surname,
-                        "Auth_level" => $auth_level
+                        "Auth_level" => $auth_level,
+                        "Instrument" => $instrument
                     );
                     array_push($member_arr, $member_item);
                 }
