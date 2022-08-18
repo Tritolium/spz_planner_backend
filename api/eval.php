@@ -108,7 +108,14 @@ function getEventmissingCount($event_id)
     $statement->bindParam(":event_id", $event_id);
     $statement->execute();
     $row = $statement->fetch(PDO::FETCH_ASSOC);
-    return $row["missing"];
+    $missing = intval($row["missing"]);
+    $query = "SELECT COUNT(attendence) AS missing FROM tblMembers LEFT JOIN (SELECT * FROM tblAttendence WHERE event_id=:event_id) AS a ON tblMembers.member_id=a.member_id WHERE attendence=-1";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    $missing = $missing + intval($row["missing"]);
+    return $missing;
 }
 
 ?>
