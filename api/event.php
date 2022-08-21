@@ -49,7 +49,8 @@ switch($_SERVER['REQUEST_METHOD'])
                         "Date"      => $date,
                         "Begin"     => $begin,
                         "Departure" => $departure,
-                        "Leave_dep" => $leave_dep
+                        "Leave_dep" => $leave_dep,
+                        "Accepted"  => $accepted
                     );
                     array_push($event_arr, $event_item);
                 }
@@ -65,7 +66,8 @@ switch($_SERVER['REQUEST_METHOD'])
                     "Date"      => $date,
                     "Begin"     => $begin,
                     "Departure" => $departure,
-                    "Leave_dep" => $leave_dep
+                    "Leave_dep" => $leave_dep,
+                    "Accepted"  => $accepted
                 );
                 response_with_data(200, $event);
                 exit();
