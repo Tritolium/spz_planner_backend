@@ -131,6 +131,14 @@ function getEventInstruments($event_id)
     //sopran
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":event_id", $event_id);
+    $statement->bindValue(":instrument", "major");
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    $major = $row['instrument'];
+
+    //sopran
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
     $statement->bindValue(":instrument", "sopran");
     $statement->execute();
     $row = $statement->fetch(PDO::FETCH_ASSOC);
@@ -185,6 +193,7 @@ function getEventInstruments($event_id)
     $lyra = $row['instrument'];
 
     return array(
+        "Major"     => $major,
         "Sopran"    => $sopran,
         "Alt"       => $alt,
         "Tenor"     => $tenor,
