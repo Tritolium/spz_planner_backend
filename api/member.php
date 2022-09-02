@@ -11,6 +11,7 @@ $member = new Member($db_conn);
 $data = json_decode(file_get_contents("php://input"));
 
 header('content-type: application/json');
+header('Access-Control-Allow-Origin: *');
 
 if(isset($_GET['api_token'])){
     $auth_level = authorize($_GET['api_token']);

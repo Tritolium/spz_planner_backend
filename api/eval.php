@@ -7,6 +7,7 @@ if(!isset($_GET['api_token'])){
 }
 
 header("Content-Type: application/json");
+header('Access-Control-Allow-Origin: *');
 
 switch($_SERVER['REQUEST_METHOD']){
 case 'GET':

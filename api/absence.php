@@ -1,6 +1,8 @@
 <?php
 include_once './config/database.php';
 
+header('Access-Control-Allow-Origin: *');
+
 // checks if authorization is given, no validation
 if(!isset($_GET['api_token'])){
     http_response_code(401);

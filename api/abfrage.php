@@ -11,6 +11,7 @@ $abfrage = new Abfrage($db_conn);
 $data = json_decode(file_get_contents("php://input"));
 
 header('content-type: application/json');
+header('Access-Control-Allow-Origin: *');
 
 switch($_SERVER['REQUEST_METHOD'])
 {

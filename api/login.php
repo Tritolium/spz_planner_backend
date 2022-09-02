@@ -6,11 +6,14 @@ if($_SERVER['REQUEST_METHOD'] != 'GET'){
     exit();
 }
 
+header('Access-Control-Allow-Origin: *');
+
 $database = new Database();
 $db_conn = $database->getConnection();
 
 if(!isset($_GET['mode'])){
     http_response_code(400);
+    echo('<h>No Mode</h>');
     exit();
 }
 
@@ -18,6 +21,7 @@ switch($_GET['mode']){
 case 'login':
     if(!isset($_GET['name'])){
         http_response_code(400);
+        echo('<h>No Name</h>');
         exit();
     }
     $name = '%' . $_GET['name'] . '%';
@@ -45,6 +49,7 @@ case 'login':
 case 'update':
     if(!isset($_GET['api_token'])){
         http_response_code(400);
+        echo('<h>No Token</h>');
         exit();
     }
     $api_token = $_GET['api_token'];
