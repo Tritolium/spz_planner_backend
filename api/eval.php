@@ -128,7 +128,7 @@ function getEventInstruments($event_id)
 
     $query = "SELECT COUNT(instrument) AS instrument FROM tblAttendence LEFT JOIN tblMembers ON tblAttendence.member_id=tblMembers.member_id WHERE event_id = :event_id AND attendence = 1 AND instrument=:instrument";
     
-    //sopran
+    //major
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":event_id", $event_id);
     $statement->bindValue(":instrument", "major");
@@ -143,6 +143,14 @@ function getEventInstruments($event_id)
     $statement->execute();
     $row = $statement->fetch(PDO::FETCH_ASSOC);
     $sopran = $row['instrument'];
+
+    //diskant
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
+    $statement->bindValue(":instrument", "diskant");
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    $diskant = $row['instrument'];
 
     //alt
     $statement = $db_conn->prepare($query);
@@ -195,6 +203,7 @@ function getEventInstruments($event_id)
     return array(
         "Major"     => $major,
         "Sopran"    => $sopran,
+        "Diskant"   => $diskant,
         "Alt"       => $alt,
         "Tenor"     => $tenor,
         "Trommel"   => $trommel,
