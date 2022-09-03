@@ -48,7 +48,7 @@ function readAttendence($api_token)
            extract($row);
            $attendence_item = array(
                "Event_ID"   => intval($event_id),
-               "Attendence" => ($attendence == NULL) ? -1 : intval($attendence),
+               "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
                "Type"       => $type,
                "Location"   => $location,
                "Date"       => $date
@@ -80,7 +80,7 @@ function readAllAttendences($api_token)
             $event_arr = array();
             $att_item = array(
                 "Fullname" => $forename . " " . $surname,
-                "Attendence" => ($attendence == NULL) ? -1 : intval($attendence)
+                "Attendence" => (is_null($attendence)) ? -1 : intval($attendence)
             );
             array_push($event_arr, $att_item);
             while($row = $statement->fetch(PDO::FETCH_ASSOC)){
@@ -88,7 +88,7 @@ function readAllAttendences($api_token)
                     extract($row);
                     $att_item = array(
                         "Fullname" => $forename . " " . $surname,
-                        "Attendence" => ($attendence == NULL) ? -1 : intval($attendence)
+                        "Attendence" => (is_null($attendence)) ? -1 : intval($attendence)
                     );
                     array_push($event_arr, $att_item);
                 } else {
@@ -104,7 +104,7 @@ function readAllAttendences($api_token)
                     $event_arr = array();
                     $att_item = array(
                         "Fullname" => $forename . " " . $surname,
-                        "Attendence" => ($attendence == NULL) ? -1 : intval($attendence)
+                        "Attendence" => (is_null($attendence)) ? -1 : intval($attendence)
                     );
                     array_push($event_arr, $att_item);
                 }
@@ -131,7 +131,7 @@ function readAllAttendences($api_token)
            extract($row);
            $attendence_item = array(
                "Event_ID"   => intval($event_id),
-               "Attendence" => ($attendence == NULL) ? -1 : intval($attendence),
+               "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
                "Member_ID"  => $member_id
            );
            array_push($attendence_arr, $attendence_item);
