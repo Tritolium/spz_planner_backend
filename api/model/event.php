@@ -95,7 +95,7 @@ class Event {
             array_push($members, $row['member_id']);
         }
 
-        for($i; $i < count($members); $i++){
+        for($i = 0; $i < count($members); $i++){
             updateSingleAttendence($members[$i], $event_id, 0);
         }
 

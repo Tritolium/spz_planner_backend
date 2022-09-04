@@ -12,6 +12,7 @@ $data = json_decode(file_get_contents("php://input"));
 
 header('content-type: application/json');
 header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: PUT, POST, GET, OPTIONS');
 
 if(isset($_GET['api_token'])){
     $auth_level = authorize($_GET['api_token']);
@@ -27,6 +28,9 @@ if($auth_level < 1){
 
 switch($_SERVER['REQUEST_METHOD'])
 {
+    case 'OPTIONS':
+        http_response_code(200);
+        break;
     case 'GET':
         $id = -1;
         $filter = "all";
