@@ -221,16 +221,16 @@ function readAllAbsences($api_token, $filter)
 
     switch($filter){
     case 'all':
-        $query = "SELECT * FROM tblAbsence";
+        $query = "SELECT * FROM tblAbsence LEFT JOIN tblMembers ON tblAbsence.member_id=tblMembers.member_id ORDER BY from_date, surname";
         $statement = $db_conn->prepare($query);
         break;
     case 'current':
-        $query = "SELECT * FROM tblAbsence WHERE (from_date >= :today OR until_date >= :today)";
+        $query = "SELECT * FROM tblAbsence LEFT JOIN tblMembers ON tblAbsence.member_id=tblMembers.member_id WHERE (from_date >= :today OR until_date >= :today) ORDER BY from_date, surname";
         $statement = $db_conn->prepare($query);
         $statement->bindValue(":today", date("Y-m-d"));
         break;
     case 'past':
-        $query = "SELECT * FROM tblAbsence WHERE (from_date < :today AND  until_date < :today)";
+        $query = "SELECT * FROM tblAbsence LEFT JOIN tblMembers ON tblAbsence.member_id=tblMembers.member_id WHERE (from_date < :today AND  until_date < :today) ORDER BY from_date, surname";
         $statement = $db_conn->prepare($query);
         $statement->bindValue(":today", date("Y-m-d"));
         break;
@@ -249,7 +249,7 @@ function readAllAbsences($api_token, $filter)
         extract($row);
         $absence_item = array(
             "Absence_ID"    => intval($absence_id),
-            "Member_ID"     => intval($member_id),
+            "Fullname"      => $forename . " " . $surname,
             "From"          => $from_date,
             "Until"         => $until_date,
             "Info"          => $info
