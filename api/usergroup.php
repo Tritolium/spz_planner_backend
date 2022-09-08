@@ -174,10 +174,47 @@ function getUsergroupById($api_token, $id){
     return true;
 }
 
-function getUsergroupBySearch($api_token, $serchterm){
+function getUsergroupBySearch($api_token, $searchterm){
     if(authorize($api_token) < 2){
         http_response_code(403);
         exit();
     }
+
+    $title = '%' . $searchterm . '%';
+
+    $database = new Database();
+    $db_conn = $database->createConnection();
+
+    $query = "SELECT * FROM tblUsergroups WHERE title LIKE :title";
+
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":title", $title);
+
+    if(!$statement->execute()){
+        return false;
+    }
+
+    if($statement->rowCount < 1){
+        http_response_code(204);
+        return true;
+    }
+
+    $group_array = array();
+
+    while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+        extract($row);
+        $group = array(
+            "Usergroup_ID"  => $usergroup_id,
+            "Title"         => $title,
+            "Admin"         => $is_admin,
+            "Moderator"     => $is_moderator,
+            "Info"          => $info
+        );
+
+        array_push($group_array, $group);
+    }
+
+    response_with_data(200, $group_array);
+    return true;
 }
 ?>
