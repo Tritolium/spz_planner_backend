@@ -14,10 +14,11 @@ if(!isset($_GET['api_token'])){
     exit();
 }
 
+$data = json_decode(file_get_contents('php://input'));
+
 switch($_SERVER['REQUEST_METHOD'])
 {
-    case 'POST':
-        $data = json_decode(file_get_contents("php://input"));
+    case 'POST':        
         if(newUsergroup($_GET['api_token'], $data)){
             http_response_code(201);
         } else {
@@ -29,12 +30,13 @@ switch($_SERVER['REQUEST_METHOD'])
             http_response_code(400);
             break;
         }
-        $data = json_decode(file_get_contents("php://input"));
+        
         if(updateUsergroup($_GET['api_token'], $_GET['id'], $data)){
             http_response_code(200);
         } else {
             http_response_code(500);
         }
+
         break;
     case 'DELETE':
         if(!isset($_GET['id'])){
@@ -49,14 +51,14 @@ switch($_SERVER['REQUEST_METHOD'])
         break;
     case 'GET':
         if(isset($_GET['id'])){
-            if(!getUsergroupById($_GET['id'])){
+            if(!getUsergroupById($_GET['api_token'], $_GET['id'])){
                 http_response_code(500);
             }
             break;
         }
 
         if(isset($_GET['search'])){
-            if(!getUsergroupBySearch($_GET['search'])){
+            if(!getUsergroupBySearch($_GET['api_token'], $_GET['search'])){
                 http_response_code(500);
             }
             break;
@@ -94,7 +96,8 @@ function newUsergroup($api_token, $data){
 /**
  * @return boolval success
  */
-function updateUsergroup($api_token, $id, $data) : boolval{
+function updateUsergroup($api_token, $id, $data){
+    
     if(authorize($api_token) < 3){
         http_response_code(403);
         exit();
@@ -110,12 +113,7 @@ function updateUsergroup($api_token, $id, $data) : boolval{
     $statement->bindParam(":is_admin", $data->Admin);
     $statement->bindParam(":is_moderator", $data->Moderator);
     $statement->bindParam(":info", $data->Info);
-
-    if($statement->execute()){
-        return true;
-    }
-
-    return false;
+    return $statement->execute();
 }
 
 function deleteUsergroup($api_token, $id){
@@ -125,7 +123,7 @@ function deleteUsergroup($api_token, $id){
     }
     
     $database = new Database();
-    $db_conn = $database->createConnection();
+    $db_conn = $database->getConnection();
 
     $query = "DELETE FROM tblUsergroups WHERE usergroup_id=:usergroup_id";
     $statement = $db_conn->prepare($query);
@@ -145,7 +143,7 @@ function getUsergroupById($api_token, $id){
     }
 
     $database = new Database;
-    $db_conn = $database->createConnection();
+    $db_conn = $database->getConnection();
 
     $query = "SELECT * FROM tblUsergroups WHERE usergroup_id=:usergroup_id";
 
@@ -179,22 +177,22 @@ function getUsergroupBySearch($api_token, $searchterm){
         http_response_code(403);
         exit();
     }
-
+    
     $title = '%' . $searchterm . '%';
-
+    
     $database = new Database();
-    $db_conn = $database->createConnection();
-
+    $db_conn = $database->getConnection();
+    
     $query = "SELECT * FROM tblUsergroups WHERE title LIKE :title";
-
+    
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":title", $title);
-
+    
     if(!$statement->execute()){
         return false;
     }
-
-    if($statement->rowCount < 1){
+    
+    if($statement->rowCount() < 1){
         http_response_code(204);
         return true;
     }
