@@ -6,7 +6,11 @@ class Database{
     private $password = "Spielmannszug";
     public $conn;
 
-    public function getConnection(){
+
+    /**
+     * @return PDO Database connection
+     */
+    public function getConnection() : PDO{
 
         $this->conn = null;
 
@@ -21,7 +25,7 @@ class Database{
     }
 }
 
-/**
+/** 
  * @param string $api_token
  * @return int Level of authorization
  */
