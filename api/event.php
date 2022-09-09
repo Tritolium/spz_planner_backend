@@ -48,14 +48,15 @@ switch($_SERVER['REQUEST_METHOD'])
                 while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     extract($row);
                     $event_item = array(
-                        "Event_ID"  => intval($event_id),
-                        "Type"      => $type,
-                        "Location"  => $location,
-                        "Date"      => $date,
-                        "Begin"     => $begin,
-                        "Departure" => $departure,
-                        "Leave_dep" => $leave_dep,
-                        "Accepted"  => boolval($accepted)
+                        "Event_ID"      => intval($event_id),
+                        "Type"          => $type,
+                        "Location"      => $location,
+                        "Date"          => $date,
+                        "Begin"         => $begin,
+                        "Departure"     => $departure,
+                        "Leave_dep"     => $leave_dep,
+                        "Accepted"      => boolval($accepted),
+                        "Usergroup_ID"  => intval($usergroup_id)
                     );
                     array_push($event_arr, $event_item);
                 }
@@ -65,14 +66,15 @@ switch($_SERVER['REQUEST_METHOD'])
                 $row = $stmt->fetch(PDO::FETCH_ASSOC);
                 extract($row);
                 $event = array(
-                    "Event_ID"  => intval($event_id),
-                    "Type"      => $type,
-                    "Location"  => $location,
-                    "Date"      => $date,
-                    "Begin"     => $begin,
-                    "Departure" => $departure,
-                    "Leave_dep" => $leave_dep,
-                    "Accepted"  => boolval($accepted)
+                    "Event_ID"      => intval($event_id),
+                    "Type"          => $type,
+                    "Location"      => $location,
+                    "Date"          => $date,
+                    "Begin"         => $begin,
+                    "Departure"     => $departure,
+                    "Leave_dep"     => $leave_dep,
+                    "Accepted"      => boolval($accepted),
+                    "Usergroup_ID"  => intval($usergroup_id)
                 );
                 response_with_data(200, $event);
                 exit();

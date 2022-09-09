@@ -47,7 +47,7 @@ class Event {
 
     function update($event_data) : bool
     {
-        $query = "UPDATE " . $this->table_name . " SET type = :type, location = :location, date = :date, begin = :begin, departure = :departure, leave_dep = :leave_dep, accepted = :accepted WHERE event_id = :event_id";
+        $query = "UPDATE " . $this->table_name . " SET type = :type, location = :location, date = :date, begin = :begin, departure = :departure, leave_dep = :leave_dep, accepted = :accepted, usergroup_id = :usergroup_id WHERE event_id = :event_id";
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":event_id", $event_data->Event_ID);
@@ -58,6 +58,7 @@ class Event {
         $stmt->bindParam(":departure", $event_data->Departure);
         $stmt->bindParam(":leave_dep", $event_data->Leave_dep);
         $stmt->bindParam(":accepted", $event_data->Accepted);
+        $stmt->bindParam(":usergroup_id", $event_data->Usergroup_ID);
 
         if($stmt->execute()){
             return true;
@@ -68,7 +69,7 @@ class Event {
 
     function create($event_data) : bool
     {
-        $query = "INSERT INTO " . $this->table_name . " (type, location, date, begin, departure, leave_dep) VALUES (:type, :location, :date, :begin, :departure, :leave_dep)";
+        $query = "INSERT INTO " . $this->table_name . " (type, location, date, begin, departure, leave_dep, usergroup_id) VALUES (:type, :location, :date, :begin, :departure, :leave_dep, :usergroup_id)";
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":type", $event_data->Type);
@@ -77,6 +78,7 @@ class Event {
         $stmt->bindParam(":begin", $event_data->Begin);
         $stmt->bindParam(":departure", $event_data->Departure);
         $stmt->bindParam(":leave_dep", $event_data->Leave_dep);
+        $stmt->bindParam(":usergroup_id", $event_data->Usergroup_ID);
 
         if(!$stmt->execute()){
             return false;
