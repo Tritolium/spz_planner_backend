@@ -2,12 +2,15 @@
 include_once './config/database.php';
 include_once './util/authorization.php';
 
+header('content-type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: PUT, POST, GET, OPTIONS, DELETE');
+
 $database = new Database();
 
 $db_conn = $database->getConnection();
 
 header('content-type: application/json');
-header('Access-Control-Allow-Origin: *');
 
 if(!isset($_GET['api_token'])){
     http_response_code(403);
@@ -18,6 +21,9 @@ $data = json_decode(file_get_contents('php://input'));
 
 switch($_SERVER['REQUEST_METHOD'])
 {
+    case 'OPTIONS':
+        http_response_code(200);
+        break;
     case 'POST':        
         if(newUsergroup($_GET['api_token'], $data)){
             http_response_code(201);
