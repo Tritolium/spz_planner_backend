@@ -68,6 +68,7 @@ switch($_SERVER['REQUEST_METHOD'])
 
 function getAllMembers()
 {
+    //TODO get all users to admin user
     $database = new Database();
     $db_conn = $database->getConnection();
 

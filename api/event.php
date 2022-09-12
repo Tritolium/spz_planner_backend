@@ -40,7 +40,7 @@ switch($_SERVER['REQUEST_METHOD'])
         if(isset($_GET['id'])){
             $id = $_GET['id'];
         }
-        $stmt = $event->read($id, $filter);
+        $stmt = $event->read($id, $filter, $_GET['api_token']);
         $num = $stmt->rowCount();
         if($num > 0){
             if($id < 0){

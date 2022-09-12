@@ -16,8 +16,9 @@ class Event {
         $this->conn = $db;
     }
 
-    function read($id, $filter) : PDOStatement
+    function read($id, $filter, $api_token) : PDOStatement
     {
+        //TODO get all events for admin user
         if ($id >= 0) {
             $query = "SELECT * FROM " . $this->table_name . " WHERE event_id = :event_id";
             $stmt = $this->conn->prepare($query);
@@ -25,19 +26,43 @@ class Event {
         } else {
             switch($filter){
             case "current":
-                $query = "SELECT * FROM " . $this->table_name . " WHERE date >= :_now AND accepted = 1 ORDER BY date";
+                $query = "SELECT event_id, type, location, date, accepted, begin, departure, leave_dep, t.usergroup_id FROM tblEvents t 
+                LEFT JOIN tblUsergroupAssignments t2 
+                ON t.usergroup_id = t2.usergroup_id
+                LEFT JOIN tblMembers t4 
+                ON t2.member_id = t4.member_id 
+                WHERE api_token = :api_token 
+                AND accepted=1
+                AND date >= curdate()
+                ORDER BY date";
+
                 $stmt = $this->conn->prepare($query);
-                $stmt->bindValue(":_now", date("Y-m-d"));
+                $stmt->bindParam(":api_token", $api_token);
                 break;
             case "past":
-                $query = "SELECT * FROM " . $this->table_name . " WHERE date < :_now ORDER BY date";
+                $query = "SELECT event_id, type, location, date, accepted, begin, departure, leave_dep, t.usergroup_id FROM tblEvents t 
+                LEFT JOIN tblUsergroupAssignments t2 
+                ON t.usergroup_id = t2.usergroup_id
+                LEFT JOIN tblMembers t4 
+                ON t2.member_id = t4.member_id 
+                WHERE api_token = :api_token 
+                AND accepted=1
+                AND date < curdate()
+                ORDER BY date";
                 $stmt = $this->conn->prepare($query);
-                $stmt->bindValue(":_now", date("Y-m-d"));
+                $stmt->bindParam(":api_token", $api_token);
                 break;
             default:
             case "all":
-                $query = "SELECT * FROM " . $this->table_name . " ORDER BY date";
+                $query = "SELECT event_id, type, location, date, accepted, begin, departure, leave_dep, t.usergroup_id FROM tblEvents t 
+                LEFT JOIN tblUsergroupAssignments t2 
+                ON t.usergroup_id = t2.usergroup_id
+                LEFT JOIN tblMembers t4 
+                ON t2.member_id = t4.member_id 
+                WHERE api_token = :api_token
+                ORDER BY date";
                 $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(":api_token", $api_token);
                 break;
             }
         }
