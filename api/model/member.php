@@ -11,23 +11,6 @@ class Member {
         $this->conn = $db;
     }
 
-    function read() : PDOStatement
-    {
-        $query = "SELECT * FROM " . $this->table_name . " ORDER BY surname, forename";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt;
-    }
-
-    function readSingle($id) : PDOStatement
-    {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE member_id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":id", $id);
-        $stmt->execute();
-        return $stmt;
-    }
-
     function create($member_data) : bool
     {
         $query = "INSERT INTO " . $this->table_name . " (forename, surname, auth_level, nicknames, instrument, api_token) VALUES (:fname, :sname, :auth, :nick, :instrument, :api)";

@@ -12,6 +12,8 @@ $data = json_decode(file_get_contents("php://input"));
 
 header('content-type: application/json');
 header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: PUT, POST, GET, OPTIONS');
+header('Access-Control-Allow-Headers: content-type');
 
 if(isset($_GET['api_token'])){
     $auth_level = authorize($_GET['api_token']);
@@ -27,6 +29,9 @@ if($auth_level < 2){
 
 switch($_SERVER['REQUEST_METHOD'])
 {
+    case 'OPTIONS':
+        http_response_code(200);
+        break;
     case 'POST':
         // INSERT
         if(!empty($data))
@@ -44,60 +49,14 @@ switch($_SERVER['REQUEST_METHOD'])
     case 'GET':
         // SELECT
         if(isset($_GET['id'])){
-            $id = $_GET['id'];
-            $stmt = $member->readSingle($id);
-            $num = $stmt->rowCount();
-
-            switch($num) {
-            case 0:
-                http_response_code(404);
-                break;
-            case 1:
-                $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                extract($row);
-                $member = array(
-                    "Member_ID" => $member_id,
-                    "Forename"  => $forename,
-                    "Surname"   => $surname,
-                    "Nicknames" => $nicknames,
-                    "Auth_level" => $auth_level,
-                    "Instrument" => $instrument
-                );
-                response_with_data(200, $member);
-                break;
-            default:
-                http_response_code(500);
-                break;
-            }
-
+            getMemberById($_GET['id']);
         } else {
-            $stmt = $member->read();
-            $num = $stmt->rowCount();
-
-            if($num > 0) {
-                $member_arr = array();
-                while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                    extract($row);
-                    $member_item = array(
-                        "Member_ID"        => $member_id,
-                        "Forename"  => $forename,
-                        "Surname"   => $surname,
-                        "Auth_level" => $auth_level,
-                        "Instrument" => $instrument
-                    );
-                    array_push($member_arr, $member_item);
-                }
-
-                response_with_data(200, $member_arr);
-            } else {
-                http_response_code(204);
-            }
+            getAllMembers();
         }
-
-        
         break;
     case 'PUT':
         if($member->update($data)){
+            processUsergroupAssignments($data->UsergroupChanges, $data->Member_ID);
             http_response_code(200);
         } else {
             http_response_code(400);
@@ -105,5 +64,139 @@ switch($_SERVER['REQUEST_METHOD'])
         break;
     default:
         http_response_code(501);
+}
+
+function getAllMembers()
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT * FROM tblMembers ORDER BY surname, forename";
+    $statement = $db_conn->prepare($query);
+    
+    if(!$statement->execute()){
+        http_response_code(500);
+        exit();
+    }
+
+    if($statement->rowCount() < 1){
+        http_response_code(204);
+        exit();
+    }
+    
+    $member_arr = array();
+
+    while($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+        extract($row);
+        $member_item = array(
+            "Member_ID"     => $member_id,
+            "Forename"      => $forename,
+            "Surname"       => $surname,
+            "Auth_level"    => $auth_level,
+            "Instrument"    => $instrument,
+            "Usergroups"    => getUsergroupAssignments($member_id)
+        );
+        array_push($member_arr, $member_item);
+    }
+
+    response_with_data(200, $member_arr);
+}
+
+function getMemberById($id)
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT * FROM tblMembers WHERE member_id = :id";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":id", $id);
+    $statement->execute();
+
+    if(!$statement->execute()){
+        http_response_code(500);
+        exit();
+    }
+
+    if($statement->rowCount() < 1){
+        http_response_code(404);
+        exit();
+    }
+
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    extract($row);
+
+    $member = array(
+        "Member_ID" => $member_id,
+        "Forename"  => $forename,
+        "Surname"   => $surname,
+        "Nicknames" => $nicknames,
+        "Auth_level" => $auth_level,
+        "Instrument" => $instrument,
+        "Usergroups" => getUsergroupAssignments($id)
+    );
+
+    response_with_data(200, $member);
+}
+
+function getUsergroupAssignments($id)
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT tblUsergroups.usergroup_id, title, member_id FROM (SELECT * FROM tblUsergroupAssignments WHERE member_id=:member_id) AS ass RIGHT JOIN tblUsergroups ON tblUsergroups.usergroup_id=ass.usergroup_id";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":member_id", $id);
+
+    if(!$statement->execute()){
+        http_response_code(500);
+        exit();
+    }
+
+    $usergroups = array();
+
+    while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+        extract($row);
+        $usergroup = array(
+            "Usergroup_ID"  => $usergroup_id,
+            "Title"         => $title,
+            "Assigned"      => is_null($member_id) ? false : true
+        );
+        array_push($usergroups, $usergroup);
+    }
+
+    return $usergroups;
+}
+
+function processUsergroupAssignments($changes, $member_id)
+{
+    foreach($changes as $usergroup_id => $assignment){
+        $assignment ? setUsergroupAssignment($usergroup_id, $member_id) : deleteUsergroupAssignment($usergroup_id, $member_id);
+    }
+}
+
+function setUsergroupAssignment($usergroup_id, $member_id)
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "INSERT INTO tblUsergroupAssignments (usergroup_id, member_id) VALUES (:usergroup_id, :member_id)";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":usergroup_id", $usergroup_id);
+    $statement->bindParam(":member_id", $member_id);
+
+    $statement->execute();
+}
+
+function deleteUsergroupAssignment($usergroup_id, $member_id)
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "DELETE FROM tblUsergroupAssignments WHERE usergroup_id=:usergroup_id AND member_id=:member_id";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":usergroup_id", $usergroup_id);
+    $statement->bindParam(":member_id", $member_id);
+
+    $statement->execute();
 }
 ?>

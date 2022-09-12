@@ -70,6 +70,13 @@ switch($_SERVER['REQUEST_METHOD'])
             break;
         }
 
+        if(isset($_GET['own'])){
+            if(!getOwnUsergroups($_GET['api_token'])){
+                http_response_code(500);
+            }
+            break;
+        }
+
         http_response_code(400);
         break;
     default:
@@ -219,6 +226,39 @@ function getUsergroupBySearch($api_token, $searchterm){
     }
 
     response_with_data(200, $group_array);
+    return true;
+}
+
+function getOwnUsergroups($api_token)
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT t.usergroup_id, title from tblUsergroupAssignments t 
+    left join tblUsergroups t3 
+    on t.usergroup_id = t3.usergroup_id 
+    left join tblMembers t2 
+    on t.member_id = t2.member_id 
+    where api_token = :api_token";
+
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":api_token", $api_token);
+
+    $statement->execute();
+
+    $usergroups = array();
+
+    while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+        extract($row);
+        $usergroup = array(
+            "Usergroup_ID"  => $usergroup_id,
+            "Title"         => $title
+        );
+
+        array_push($usergroups, $usergroup);
+    }
+
+    response_with_data(200, $usergroups);
     return true;
 }
 ?>
