@@ -34,7 +34,7 @@ class Event {
                 WHERE api_token = :api_token 
                 AND accepted=1
                 AND date >= curdate()
-                ORDER BY date";
+                ORDER BY date, begin";
 
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(":api_token", $api_token);
@@ -48,7 +48,7 @@ class Event {
                 WHERE api_token = :api_token 
                 AND accepted=1
                 AND date < curdate()
-                ORDER BY date";
+                ORDER BY date, begin";
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(":api_token", $api_token);
                 break;
@@ -60,7 +60,7 @@ class Event {
                 LEFT JOIN tblMembers t4 
                 ON t2.member_id = t4.member_id 
                 WHERE api_token = :api_token
-                ORDER BY date";
+                ORDER BY date, begin";
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(":api_token", $api_token);
                 break;

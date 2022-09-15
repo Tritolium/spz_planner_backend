@@ -51,7 +51,7 @@ switch($_SERVER['REQUEST_METHOD'])
         if(isset($_GET['id'])){
             getMemberById($_GET['id']);
         } else {
-            getAllMembers();
+            getAllMembers($_GET['api_token']);
         }
         break;
     case 'PUT':
@@ -66,14 +66,29 @@ switch($_SERVER['REQUEST_METHOD'])
         http_response_code(501);
 }
 
-function getAllMembers()
+function getAllMembers($api_token)
 {
     //TODO get all users to admin user
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT * FROM tblMembers ORDER BY surname, forename";
+    $query = "SELECT tm2.member_id, forename, surname, auth_level, instrument, nicknames FROM
+    (SELECT member_id FROM
+    (SELECT usergroup_id FROM tblUsergroupAssignments tua 
+    LEFT JOIN tblMembers tm
+    ON tua.member_id = tm.member_id
+    WHERE api_token=:api_token) as ugroups
+    LEFT JOIN tblUsergroupAssignments tua2 
+    ON ugroups.usergroup_id = tua2.usergroup_id
+    GROUP BY member_id) AS members
+    LEFT JOIN tblMembers tm2 
+    ON members.member_id = tm2.member_id 
+    ORDER BY surname, forename";
+
+    /*$query = "SELECT * FROM tblMembers ORDER BY surname, forename";*/
+
     $statement = $db_conn->prepare($query);
+    $statement->bindParam(":api_token", $api_token);
     
     if(!$statement->execute()){
         http_response_code(500);

@@ -37,7 +37,7 @@ function readAttendence($api_token)
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT events.event_id, type, location, date, attendence FROM (SELECT event_id, t4.member_id, type, location, date, accepted FROM tblEvents t 
+    $query = "SELECT events.event_id, type, location, date, attendence FROM (SELECT event_id, t4.member_id, type, location, date, begin, accepted FROM tblEvents t 
     LEFT JOIN tblUsergroupAssignments t2 
     ON t.usergroup_id = t2.usergroup_id
     LEFT JOIN tblMembers t4 
@@ -47,7 +47,7 @@ function readAttendence($api_token)
     LEFT JOIN tblAttendence t3
     ON events.event_id = t3.event_id AND events.member_id = t3.member_id 
     WHERE date >= curdate()
-    ORDER BY date";
+    ORDER BY date, begin";
 
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":api_token", $api_token);
@@ -96,7 +96,7 @@ function readAllAttendences($api_token, $usergroup_id)
     ON users.member_id = t4.member_id 
     AND t4.event_id = t3.event_id
     WHERE date >= curdate() AND accepted=1
-    ORDER BY date, surname, forename";
+    ORDER BY date, begin, surname, forename";
 
     $statement = $db_conn->prepare($query);
     $statement->bindValue(':usergroup_id', $usergroup_id);

@@ -72,15 +72,22 @@ function newAbsence($api_token, $data)
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    // get member_id from api_token
-    $query = "SELECT member_id FROM tblMembers WHERE api_token=:api_token";
-    $statement = $db_conn->prepare($query);
-    $statement->bindParam(":api_token", $api_token);
-    if(!$statement->execute() || $statement->rowCount() < 1){
-        return false;
+    if(isset($data->Member_ID)){
+        $member_id = $data->Member_ID;
+    } else {
+        /**
+         * member_id not given, so its own absence. Get own member_id via api_token
+         */
+        $query = "SELECT member_id FROM tblMembers WHERE api_token=:api_token";
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(":api_token", $api_token);
+        if(!$statement->execute() || $statement->rowCount() < 1){
+            return false;
+        }
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        $member_id = $row['member_id'];
     }
-    $row = $statement->fetch(PDO::FETCH_ASSOC);
-    $member_id = $row['member_id'];
+    
     $query = "INSERT INTO tblAbsence (member_id, from_date, until_date, info) VALUES (:member_id, :from_date, :until_date, :info)";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":member_id", $member_id);
