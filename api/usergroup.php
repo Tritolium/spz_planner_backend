@@ -155,7 +155,7 @@ function getUsergroupById($api_token, $id){
         exit();
     }
 
-    $database = new Database;
+    $database = new Database();
     $db_conn = $database->getConnection();
 
     $query = "SELECT * FROM tblUsergroups WHERE usergroup_id=:usergroup_id";

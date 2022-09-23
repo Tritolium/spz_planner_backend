@@ -47,6 +47,58 @@ function authorize($api_token) : int
     return 0;
 }
 
+function isAdmin($api_token) : bool
+{
+    $db = new Database();
+    $connection = $db->getConnection();
+
+    $query = "SELECT * FROM 
+    (SELECT member_id from tblMembers tm 
+    WHERE tm.api_token = :api_token) AS member
+    left join tblUsergroupAssignments tua 
+    on member.member_id = tua.member_id 
+    left join tblUsergroups tu 
+    on tua.usergroup_id = tu.usergroup_id
+    where is_admin = 1";
+    
+    $statement = $connection->prepare($query);
+    $statement->bindParam(":api_token", $api_token);
+
+    if($statement->execute()){
+        if($statement->rowCount() > 0){
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function isMod($api_token) : bool
+{
+    $db = new Database();
+    $connection = $db->getConnection();
+
+    $query = "SELECT * FROM 
+    (SELECT member_id from tblMembers tm 
+    WHERE tm.api_token = :api_token) AS member
+    left join tblUsergroupAssignments tua 
+    on member.member_id = tua.member_id 
+    left join tblUsergroups tu 
+    on tua.usergroup_id = tu.usergroup_id
+    where is_moderator = 1";
+    
+    $statement = $connection->prepare($query);
+    $statement->bindParam(":api_token", $api_token);
+
+    if($statement->execute()){
+        if($statement->rowCount() > 0){
+            return true;
+        }
+    }
+
+    return isAdmin($api_token);
+}
+
 /**
  * @param int $code
  * @param string $response
