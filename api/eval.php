@@ -69,7 +69,7 @@ function getEventConsentCount($event_id, $usergroup_id)
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT COUNT(attendence) AS refusal 
+    $query = "SELECT COUNT(attendence) AS consent 
     FROM (SELECT tm.member_id FROM tblMembers tm 
     left join tblUsergroupAssignments tua 
     on tm.member_id = tua.member_id 
@@ -77,7 +77,7 @@ function getEventConsentCount($event_id, $usergroup_id)
     LEFT JOIN 
     (SELECT * FROM tblAttendence WHERE event_id=:event_id) AS a 
     ON users.member_id=a.member_id 
-    WHERE attendence=0";
+    WHERE attendence=1";
 
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":usergroup_id", $usergroup_id);
