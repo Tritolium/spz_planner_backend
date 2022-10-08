@@ -69,8 +69,18 @@ function getEventConsentCount($event_id, $usergroup_id)
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT COUNT(attendence) AS consent FROM tblMembers LEFT JOIN (SELECT * FROM tblAttendence WHERE event_id=:event_id) AS a ON tblMembers.member_id=a.member_id WHERE attendence=1";
+    $query = "SELECT COUNT(attendence) AS refusal 
+    FROM (SELECT tm.member_id FROM tblMembers tm 
+    left join tblUsergroupAssignments tua 
+    on tm.member_id = tua.member_id 
+    where tua.usergroup_id = :usergroup_id) as users 
+    LEFT JOIN 
+    (SELECT * FROM tblAttendence WHERE event_id=:event_id) AS a 
+    ON users.member_id=a.member_id 
+    WHERE attendence=0";
+
     $statement = $db_conn->prepare($query);
+    $statement->bindParam(":usergroup_id", $usergroup_id);
     $statement->bindParam(":event_id", $event_id);
     $statement->execute();
     $row = $statement->fetch(PDO::FETCH_ASSOC);
