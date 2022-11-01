@@ -32,9 +32,13 @@ switch($_SERVER['REQUEST_METHOD'])
         }
         break;
     case 'PUT':
-        if(!isset($_GET['id'])){
-            http_response_code(400);
-            break;
+        if(isset($_GET['assign'])){
+            if(updateAssignments($_GET['api_token'], $data)){
+                http_response_code(200);
+            } else {
+                http_response_code(500);
+            }
+
         }
         
         if(updateUsergroup($_GET['api_token'], $_GET['id'], $data)){
@@ -72,6 +76,13 @@ switch($_SERVER['REQUEST_METHOD'])
 
         if(isset($_GET['own'])){
             if(!getOwnUsergroups($_GET['api_token'])){
+                http_response_code(500);
+            }
+            break;
+        }
+
+        if(isset($_GET['array'])){
+            if(!getComplUsergroupAssignment($_GET['api_token'])){
                 http_response_code(500);
             }
             break;
@@ -260,5 +271,149 @@ function getOwnUsergroups($api_token)
 
     response_with_data(200, $usergroups);
     return true;
+}
+
+function getComplUsergroupAssignment($api_token)
+{
+    if(!isAdmin($api_token)){
+        http_response_code(403);
+        exit();
+    }
+
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT assign.usergroup_id, title, assign.member_id, tua.member_id AS assigned, assign.forename, assign.surname FROM 
+    (SELECT tu.usergroup_id, tu.title, tm.member_id, tm.forename, tm.surname  
+    FROM tblUsergroups tu 
+    JOIN tblMembers tm) AS assign
+    LEFT JOIN tblUsergroupAssignments tua 
+    ON assign.usergroup_id = tua.usergroup_id 
+    AND assign.member_id = tua.member_id
+    ORDER BY surname, forename, usergroup_id";
+
+    $statement = $db_conn->prepare($query);
+
+    if(!$statement->execute()){
+        return false;
+    }
+
+    // wenn statement erfolgreich:
+    if($statement->execute()){
+        $assignments = array();
+        $usergroups = array();
+        // zeile holen. wenn zeile gefunden:
+        if($row = $statement->fetch(PDO::FETCH_ASSOC)){
+            // erste Zeile setzt curr_member_id
+            $curr_member_id = intval($row['member_id']);
+            // extract, ersten gruppeneintrag füllen
+            extract($row);
+            $usergroup = array(
+                "Usergroup_ID"  => $usergroup_id,
+                "Title"         => $title,
+                "Assigned"      => (is_null($assigned)) ? false : true
+            );
+            // in gruppenliste pushen
+            array_push($usergroups, $usergroup);
+            // while-schleife über die nächsten zeilen
+            while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+                // wenn curr_member_id = row['member_id']:
+                if($curr_member_id == $row['member_id']){
+                    // extract, nächsten gruppeneintrag füllen, in liste pushen
+                    extract($row);
+                    $usergroup = array(
+                        "Usergroup_ID"  => $usergroup_id,
+                        "Title"         => $title,
+                        //"Test"          => $assigned,
+                        "Assigned"      => (is_null($assigned)) ? false : true
+                    );
+                    array_push($usergroups, $usergroup);
+                } else {
+                    // member-eintrag füllen, gruppenliste als attribut
+                    $member = array(
+                        "Member_ID"     => $member_id,
+                        "Fullname"      => $forename . " " . $surname,
+                        "Usergroups"    => $usergroups
+                    );
+                    // eintrag in assignments pushen
+                    array_push($assignments, $member);
+                    // extract, curr auf neue member_id, nächsten gruppeneintrag füllen, in liste pushen
+                    extract($row);
+                    $curr_member_id = $member_id;
+                    $usergroups = array();
+                    $usergroup = array(
+                        "Usergroup_ID"  => $usergroup_id,
+                        "Title"         => $title,
+                        "Assigned"      => (is_null($assigned)) ? false : true
+                    );
+                    // in gruppenliste pushen
+                    array_push($usergroups, $usergroup);
+                }
+            }
+
+            // nach letzter Zeile:
+            // member-eintrag füllen, gruppenliste als attribut
+            $member = array(
+                "Member_ID"     => $member_id,
+                "Fullname"      => $forename . " " . $surname,
+                "Usergroups"    => $usergroups
+            );
+            // eintrag in assignments pushen
+            array_push($assignments, $member);
+
+            response_with_data(200, $assignments);
+
+            return true;
+        }
+
+        return false;
+    }
+}
+
+function updateAssignments($api_token, $assignments)
+{
+    if(!isAdmin($api_token)){
+        http_response_code(403);
+        exit();
+    }
+
+    foreach($assignments as $member => $changes){
+        processUsergroupAssignments($changes, $member);
+    }
+
+    return true;
+}
+
+function processUsergroupAssignments($changes, $member_id)
+{
+    foreach($changes as $usergroup_id => $assignment){
+        $assignment ? setUsergroupAssignment($usergroup_id, $member_id) : deleteUsergroupAssignment($usergroup_id, $member_id);
+    }
+}
+
+function setUsergroupAssignment($usergroup_id, $member_id)
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "INSERT INTO tblUsergroupAssignments (usergroup_id, member_id) VALUES (:usergroup_id, :member_id)";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":usergroup_id", $usergroup_id);
+    $statement->bindParam(":member_id", $member_id);
+
+    $statement->execute();
+}
+
+function deleteUsergroupAssignment($usergroup_id, $member_id)
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "DELETE FROM tblUsergroupAssignments WHERE usergroup_id=:usergroup_id AND member_id=:member_id";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":usergroup_id", $usergroup_id);
+    $statement->bindParam(":member_id", $member_id);
+
+    $statement->execute();
 }
 ?>
