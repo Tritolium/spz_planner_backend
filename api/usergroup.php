@@ -96,7 +96,7 @@ switch($_SERVER['REQUEST_METHOD'])
 }
 
 function newUsergroup($api_token, $data){
-    if(authorize($api_token) < 3){
+    if(!isAdmin($api_token)){
         http_response_code(403);
         exit();
     }
@@ -122,7 +122,7 @@ function newUsergroup($api_token, $data){
  */
 function updateUsergroup($api_token, $id, $data){
     
-    if(authorize($api_token) < 3){
+    if(!isAdmin($api_token)){
         http_response_code(403);
         exit();
     }
@@ -141,7 +141,7 @@ function updateUsergroup($api_token, $id, $data){
 }
 
 function deleteUsergroup($api_token, $id){
-    if(authorize($api_token) < 3){
+    if(!isAdmin($api_token)){
         http_response_code(403);
         exit();
     }

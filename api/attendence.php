@@ -210,7 +210,20 @@ function readMissingAttendences()
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT * FROM viewMissingAttendence";
+    /*$query = "SELECT * FROM viewMissingAttendence";*/
+    $query = "SELECT forename, surname, type, location, date FROM tblMembers t 
+    JOIN tblUsergroupAssignments t2 
+    ON t.member_id = t2.member_id 
+    JOIN tblEvents t3 
+    ON t2.usergroup_id = t3.usergroup_id 
+    LEFT JOIN tblAttendence t4 
+    ON t.member_id = t4.member_id 
+    AND t3.event_id = t4.event_id 
+    WHERE t3.`date` >= curdate() 
+    AND t3.`date` < date_add(curdate(), interval 2 day)
+    AND t4.attendence is null 
+    GROUP BY t.member_id
+    ORDER BY surname, forename";
 
     $statement = $db_conn->prepare($query);
 
@@ -224,11 +237,31 @@ function readMissingAttendences()
             $missing = array(
                 "Forename" => $forename,
                 "Surname"  => $surname,
-                "FirstMissing" => $type . " " . $location
+                "Type"     => $type,
+                "Location" => $location,
+                "Date"     => $date
             );
             array_push($attendences, $missing);
         }
+        echo json_to_html($attendences);
         response_with_data(200, $attendences);
+
+        mail("podom@t-online.de", "Fehlende Rückmeldungen für heute", "Fehlende Rückmeldungen: " . json_to_html($attendences), 'From: <podom@t-online.de>');
     }
     exit();
+}
+
+function json_to_html($json)
+{
+    $html = '<html><ul>';
+    echo print_r($json);
+    foreach($json as $item){
+        extract($json);
+
+        $html .= '<li>' . `$Forename $Surname` . '</li>';
+    }
+
+    $html .= '</ul></html>';
+
+    return $html;
 }
