@@ -205,7 +205,7 @@ function updateSingleAttendence($member_id, $event_id, $attendence)
     $statement->execute();
 
     if($attendence == 0) {
-        $query = "SELECT * FROM tblEvents WHERE event_id=:event_id AND date=curdate()"
+        $query = "SELECT * FROM tblEvents WHERE event_id=:event_id AND date=curdate()";
         $statement = $db_conn->prepare($query);
         $statement->bindParam(":event_id", $event_id);
         $statement->execute();
@@ -215,9 +215,9 @@ function updateSingleAttendence($member_id, $event_id, $attendence)
             $statement->bindParam(":member_id", $member_id);
             $statement->execute();
             $row = $statement->fetch(PDO::FETCH_ASSOC);
-            $fullname = $row['forename'] . " " . $['surname'];
+            $fullname = $row['forename'] . " " . $row['surname'];
 
-            mail("podom@t-online.de", "Abmeldung für heute", $fullname . "hat sich für heute abgemeldet", 'From: <podom@t-online.de>');
+            mail("podom@t-online.de", "Abmeldung für heute", $fullname . " hat sich für heute abgemeldet", 'From: <podom@t-online.de>');
         }
     }
 }
