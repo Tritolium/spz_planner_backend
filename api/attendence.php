@@ -203,6 +203,23 @@ function updateSingleAttendence($member_id, $event_id, $attendence)
     }
     
     $statement->execute();
+
+    if($attendence == 0) {
+        $query = "SELECT * FROM tblEvents WHERE event_id=:event_id AND date=curdate()"
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(":event_id", $event_id);
+        $statement->execute();
+        if($statement->rowCount() !== 0){
+            $query = "SELECT forename, surname FROM tblMembers WHERE member_id=:member_id";
+            $statement = $db_conn->prepare($query);
+            $statement->bindParam(":member_id", $member_id);
+            $statement->execute();
+            $row = $statement->fetch(PDO::FETCH_ASSOC);
+            $fullname = $row['forename'] . " " . $['surname'];
+
+            mail("podom@t-online.de", "Abmeldung für heute", $fullname . "hat sich für heute abgemeldet", 'From: <podom@t-online.de>');
+        }
+    }
 }
 
 function readMissingAttendences()
