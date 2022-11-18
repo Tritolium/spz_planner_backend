@@ -60,6 +60,9 @@ switch($_SERVER['REQUEST_METHOD'])
         }
         break;
     case 'GET':
+
+        $modifiedsince = $_SERVER['HTTP_IS_MODIFIED_SINCE'];
+
         if(isset($_GET['id'])){
             if(!getUsergroupById($_GET['api_token'], $_GET['id'])){
                 http_response_code(500);
@@ -75,7 +78,7 @@ switch($_SERVER['REQUEST_METHOD'])
         }
 
         if(isset($_GET['own'])){
-            if(!getOwnUsergroups($_GET['api_token'])){
+            if(!getOwnUsergroups($_GET['api_token'], $modifiedsince)){
                 http_response_code(500);
             }
             break;
@@ -240,10 +243,14 @@ function getUsergroupBySearch($api_token, $searchterm){
     return true;
 }
 
-function getOwnUsergroups($api_token)
+function getOwnUsergroups($api_token, $modifiedsince)
 {
     $database = new Database();
     $db_conn = $database->getConnection();
+
+    $query = "SELECT max(UPDATE_TIME) FROM information_schema.tables WHERE TABLE_NAME = 'tblUsergroups' OR TABLE_NAME = 'tblMembers' OR TABLE_NAME = 'tblUsergroupAssignments";
+
+    //TODO: compare max(UPDATE_TIME) with $modifiedsince, if ut > ms send data, else 304
 
     $query = "SELECT t.usergroup_id, title from tblUsergroupAssignments t 
     left join tblUsergroups t3 
