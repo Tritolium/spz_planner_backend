@@ -260,25 +260,27 @@ function readMissingAttendences()
             );
             array_push($attendences, $missing);
         }
-        echo json_to_html($attendences);
         response_with_data(200, $attendences);
-
-        mail("podom@t-online.de", "Fehlende Rückmeldungen für heute", "Fehlende Rückmeldungen: " . json_to_html($attendences), 'From: <podom@t-online.de>');
+        $headers = array();
+        $headers[] = "From: <podom@t-online.de>";
+        $headers[] = "Content-type: text/html; charset=utf8";
+        mail("podom@t-online.de", "Fehlende Rückmeldungen für heute", json_to_html($attendences), implode("\r\n", $headers));
     }
     exit();
 }
 
 function json_to_html($json)
 {
-    $html = '<html><ul>';
+    $html = "Fehlende Rückmeldungen:<br><ul>";
     echo print_r($json);
     foreach($json as $item){
-        extract($json);
+        extract($item);
 
-        $html .= '<li>' . `$Forename $Surname` . '</li>';
+        $html .= "<li>" . $Forename . " " . $Surname . "</li>";
     }
 
-    $html .= '</ul></html>';
+    $html .= "</ul>";
 
+    echo $html;
     return $html;
 }
