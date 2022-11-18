@@ -280,6 +280,8 @@ function getComplUsergroupAssignment($api_token)
         exit();
     }
 
+    $success = false;
+
     $database = new Database();
     $db_conn = $database->getConnection();
 
@@ -294,13 +296,17 @@ function getComplUsergroupAssignment($api_token)
 
     $statement = $db_conn->prepare($query);
 
-    if(!$statement->execute()){
-        return false;
-    }
-
     // wenn statement erfolgreich:
     if($statement->execute()){
-        $assignments = array();
+        $success = processUsergroupAssignmentStatement($statement);
+    }
+
+    return $success;
+}
+
+function processUsergroupAssignmentStatement($statement)
+{
+    $assignments = array();
         $usergroups = array();
         // zeile holen. wenn zeile gefunden:
         if($row = $statement->fetch(PDO::FETCH_ASSOC)){
@@ -367,7 +373,6 @@ function getComplUsergroupAssignment($api_token)
         }
 
         return false;
-    }
 }
 
 function updateAssignments($api_token, $assignments)
