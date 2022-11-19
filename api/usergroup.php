@@ -1,10 +1,12 @@
 <?php
 include_once './config/database.php';
 include_once './util/authorization.php';
+include_once './util/caching.php';
 
 header('content-type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: PUT, POST, GET, OPTIONS, DELETE');
+header('Access-Control-Allow-Headers: if-modified-since');
 
 $database = new Database();
 
@@ -59,10 +61,7 @@ switch($_SERVER['REQUEST_METHOD'])
             http_response_code(500);
         }
         break;
-    case 'GET':
-
-        $modifiedsince = $_SERVER['HTTP_IS_MODIFIED_SINCE'];
-
+    case 'GET':    
         if(isset($_GET['id'])){
             if(!getUsergroupById($_GET['api_token'], $_GET['id'])){
                 http_response_code(500);
@@ -78,7 +77,7 @@ switch($_SERVER['REQUEST_METHOD'])
         }
 
         if(isset($_GET['own'])){
-            if(!getOwnUsergroups($_GET['api_token'], $modifiedsince)){
+            if(!getOwnUsergroups($_GET['api_token'])){
                 http_response_code(500);
             }
             break;
@@ -243,14 +242,12 @@ function getUsergroupBySearch($api_token, $searchterm){
     return true;
 }
 
-function getOwnUsergroups($api_token, $modifiedsince)
+function getOwnUsergroups($api_token)
 {
+    checkIfModified(['tblUsergroups', 'tblUsergroupAssignments']);
+
     $database = new Database();
     $db_conn = $database->getConnection();
-
-    $query = "SELECT max(UPDATE_TIME) FROM information_schema.tables WHERE TABLE_NAME = 'tblUsergroups' OR TABLE_NAME = 'tblMembers' OR TABLE_NAME = 'tblUsergroupAssignments";
-
-    //TODO: compare max(UPDATE_TIME) with $modifiedsince, if ut > ms send data, else 304
 
     $query = "SELECT t.usergroup_id, title from tblUsergroupAssignments t 
     left join tblUsergroups t3 
@@ -276,6 +273,7 @@ function getOwnUsergroups($api_token, $modifiedsince)
         array_push($usergroups, $usergroup);
     }
 
+
     response_with_data(200, $usergroups);
     return true;
 }
@@ -286,6 +284,8 @@ function getComplUsergroupAssignment($api_token)
         http_response_code(403);
         exit();
     }
+
+    checkIfModified(['tblUsergroups', 'tblUsergroupAssignments']);
 
     $success = false;
 
