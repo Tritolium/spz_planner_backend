@@ -1,6 +1,7 @@
 <?php
 include_once './config/database.php';
 include_once './model/member.php';
+include_once './util/caching.php';
 
 $database = new Database();
 
@@ -13,7 +14,7 @@ $data = json_decode(file_get_contents("php://input"));
 header('content-type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: PUT, POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: content-type');
+header('Access-Control-Allow-Headers: content-type, if-modified-since');
 
 if(isset($_GET['api_token'])){
     $auth_level = authorize($_GET['api_token']);
@@ -68,6 +69,7 @@ switch($_SERVER['REQUEST_METHOD'])
 
 function getAllMembers($api_token)
 {
+    checkIfModified(['tblMembers', 'tblUsergroupAssignments']);
     //TODO get all users to admin user
     $database = new Database();
     $db_conn = $database->getConnection();

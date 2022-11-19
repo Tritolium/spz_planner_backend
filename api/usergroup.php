@@ -1,10 +1,12 @@
 <?php
 include_once './config/database.php';
 include_once './util/authorization.php';
+include_once './util/caching.php';
 
 header('content-type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: PUT, POST, GET, OPTIONS, DELETE');
+header('Access-Control-Allow-Headers: if-modified-since');
 
 $database = new Database();
 
@@ -59,7 +61,7 @@ switch($_SERVER['REQUEST_METHOD'])
             http_response_code(500);
         }
         break;
-    case 'GET':
+    case 'GET':    
         if(isset($_GET['id'])){
             if(!getUsergroupById($_GET['api_token'], $_GET['id'])){
                 http_response_code(500);
@@ -242,6 +244,8 @@ function getUsergroupBySearch($api_token, $searchterm){
 
 function getOwnUsergroups($api_token)
 {
+    checkIfModified(['tblUsergroups', 'tblUsergroupAssignments']);
+
     $database = new Database();
     $db_conn = $database->getConnection();
 
@@ -269,6 +273,7 @@ function getOwnUsergroups($api_token)
         array_push($usergroups, $usergroup);
     }
 
+
     response_with_data(200, $usergroups);
     return true;
 }
@@ -279,6 +284,8 @@ function getComplUsergroupAssignment($api_token)
         http_response_code(403);
         exit();
     }
+
+    checkIfModified(['tblUsergroups', 'tblUsergroupAssignments']);
 
     $success = false;
 

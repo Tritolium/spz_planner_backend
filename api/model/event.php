@@ -18,6 +18,7 @@ class Event {
 
     function read($id, $filter, $api_token) : PDOStatement
     {
+        checkIfModified(['tblEvents', 'tblUsergroupAssignments']);
         //TODO get all events for admin user
         if ($id >= 0) {
             $query = "SELECT * FROM " . $this->table_name . " WHERE event_id = :event_id";

@@ -1,5 +1,6 @@
 <?php
 include_once './config/database.php';
+include_once './util/caching.php';
 
 if(!isset($_GET['api_token'])){
     http_response_code(401);
@@ -8,6 +9,7 @@ if(!isset($_GET['api_token'])){
 
 header("Content-Type: application/json");
 header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Headers: if-modified-since');
 
 $data = json_decode(file_get_contents("php://input"));
 
@@ -34,6 +36,8 @@ case 'PUT':
 
 function readAttendence($api_token)
 {
+    checkIfModified(['tblUsergroupAssignments', 'tblAttendence', 'tblEvents']);
+
     $database = new Database();
     $db_conn = $database->getConnection();
 
@@ -76,6 +80,8 @@ function readAttendence($api_token)
 
 function readAllAttendences($api_token, $usergroup_id)
 {
+    checkIfModified(['tblUsergroupAssignments', 'tblAttendence', 'tblEvents']);
+
     $database = new Database();
     $db_conn = $database->getConnection();
     /*
