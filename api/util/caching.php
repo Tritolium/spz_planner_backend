@@ -34,7 +34,6 @@ function checkIfModified($tables) : void
     }
 
     $lastmodified->setTimezone(new DateTimeZone("Europe/London"));
-    
-    header('Last-Modified: ' . $lastmodified->format('D, d M y H:i:s T'));
+    header('DB-Last-Modified: ' . $lastmodified->format('D, d M y H:i:s T'));
 }
 ?>
