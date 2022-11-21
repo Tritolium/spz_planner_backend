@@ -41,7 +41,7 @@ function readAttendence($api_token)
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT events.event_id, type, location, date, attendence FROM (SELECT event_id, t4.member_id, type, location, date, begin, accepted FROM tblEvents t 
+    $query = "SELECT events.event_id, type, location, date, attendence, usergroup_id FROM (SELECT event_id, t4.member_id, type, location, date, begin, accepted, t2.usergroup_id FROM tblEvents t 
     LEFT JOIN tblUsergroupAssignments t2 
     ON t.usergroup_id = t2.usergroup_id
     LEFT JOIN tblMembers t4 
@@ -61,11 +61,12 @@ function readAttendence($api_token)
         while($row = $statement->fetch(PDO::FETCH_ASSOC)) {
            extract($row);
            $attendence_item = array(
-               "Event_ID"   => intval($event_id),
-               "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
-               "Type"       => $type,
-               "Location"   => $location,
-               "Date"       => $date
+               "Event_ID"       => intval($event_id),
+               "Attendence"     => (is_null($attendence)) ? -1 : intval($attendence),
+               "Type"           => $type,
+               "Location"       => $location,
+               "Date"           => $date,
+               "Usergroup_ID"   => $usergroup_id
            );
            array_push($attendence_arr, $attendence_item);
        }
