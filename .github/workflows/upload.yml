@@ -22,5 +22,5 @@ jobs:
           server: spzroenkhausen.bplaced.net
           username: spzroenkhausen_admin
           password: Spielmannszug
-          local-dir: ./build/
-          server-dir: ./www/
+          local-dir: ./api/
+          server-dir: ./www/api/
