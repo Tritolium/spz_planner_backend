@@ -21,6 +21,6 @@ jobs:
         with:
           server: spzroenkhausen.bplaced.net
           username: spzroenkhausen_admin
-          password: Spielmannszug
+          password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./api/
           server-dir: ./www/api/
