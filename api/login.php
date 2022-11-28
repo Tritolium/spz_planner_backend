@@ -24,29 +24,43 @@ case 'login':
         echo('<h>No Name</h>');
         exit();
     }
+
     $name = '%' . $_GET['name'] . '%';
 
-    $statement = $db_conn->prepare('SELECT forename, surname, auth_level, api_token FROM tblMembers WHERE CONCAT(forename, \' \', surname, \' \', nicknames) LIKE :full_name');
-    $statement->bindParam(":full_name", $name);
+    $statement = $db_conn->prepare('SELECT forename, surname, auth_level, api_token FROM tblMembers WHERE Nicknames LIKE :name');
+    $statement->bindParam(":name", $name);
 
     if($statement->execute()){
         if($statement->rowCount() == 1){
             $row = $statement->fetch(PDO::FETCH_ASSOC);
-            extract($row);
-            $response_body = array(
-                "Forename" => $forename,
-                "Surname" => $surname,
-                "API_token" => $api_token,
-                "Auth_level" => $auth_level
-            );
-
-            lastLogin($api_token);
-
-            response_with_data(200, $response_body);
         } else {
-            http_response_code(404);
+            $statement = $db_conn->prepare('SELECT forename, surname, auth_level, api_token FROM tblMembers WHERE CONCAT(forename, \' \', surname, \' \', nicknames) LIKE :full_name');
+            $statement->bindParam(":full_name", $name);
+            
+            if($statement->execute()){
+                if($statement->rowCount() == 1){
+                    $row = $statement->fetch(PDO::FETCH_ASSOC);
+                }
+            }
         }
     }
+
+    if($row !== NULL){
+        extract($row);
+        $response_body = array(
+            "Forename" => $forename,
+            "Surname" => $surname,
+            "API_token" => $api_token,
+            "Auth_level" => $auth_level
+        );
+
+        lastLogin($api_token);
+
+        response_with_data(200, $response_body);
+    } else {
+        http_response_code(404);
+    }
+
     exit();
 case 'update':
     if(!isset($_GET['api_token'])){
