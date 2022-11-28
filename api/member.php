@@ -115,6 +115,7 @@ function getAllMembers($api_token)
             "Surname"       => $surname,
             "Auth_level"    => $auth_level,
             "Instrument"    => $instrument,
+            "Nicknames"     => $nicknames,
             "Usergroups"    => getUsergroupAssignments($member_id)
         );
         array_push($member_arr, $member_item);
