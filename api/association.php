@@ -14,7 +14,7 @@ if(!isset($_GET['api_token'])){
 
 $data = json_decode(file_get_contents('php://input'));
 
-switch([$_SERVER['REQUEST_METHOD']])
+switch($_SERVER['REQUEST_METHOD'])
 {
     case 'OPTIONS':
         http_response_code(200);
