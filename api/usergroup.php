@@ -12,8 +12,6 @@ $database = new Database();
 
 $db_conn = $database->getConnection();
 
-header('content-type: application/json');
-
 if(!isset($_GET['api_token'])){
     http_response_code(403);
     exit();
