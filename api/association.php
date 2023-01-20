@@ -52,7 +52,7 @@ function newAssociation($api_token, $data){
     $query = "INSERT INTO tblAssociations (title, firstchair, treasurer, clerk) VALUES (:title, :firstchair, :treasurer, :clerk)";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":title", $data->Title);
-    $statement->bindParam(":firstchair", $data->Firstchair);
+    $statement->bindParam(":firstchair", $data->FirstChair);
     $statement->bindParam(":treasurer", $data->Treasurer);
     $statement->bindParam(":clerk", $data->Clerk);
     
@@ -75,7 +75,7 @@ function updateAssociation($api_token, $id, $data){
     $query = "UPDATE tblAssociations SET title=:title, firstchair=:firstchair, treasurer=:treasurer, clerk=:clerk WHERE association_id = :association_id";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":title", $data->Title);
-    $statement->bindParam(":firstchair", $data->Firstchair);
+    $statement->bindParam(":firstchair", $data->FirstChair);
     $statement->bindParam(":treasurer", $data->Treasurer);
     $statement->bindParam(":clerk", $data->Clerk);
     $statement->bindParam(":association_id", $id);
