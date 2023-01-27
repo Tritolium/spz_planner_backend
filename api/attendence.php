@@ -40,7 +40,7 @@ function readAttendence($api_token)
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT events.event_id, type, location, date, begin, departure, leave_dep, attendence, usergroup_id FROM (SELECT event_id, t4.member_id, type, location, date, begin, departure, leave_dep, accepted, t2.usergroup_id FROM tblEvents t 
+    $query = "SELECT events.event_id, type, location, date, begin, departure, leave_dep, attendence, usergroup_id, clothing FROM (SELECT event_id, t4.member_id, type, location, date, begin, departure, leave_dep, accepted, t2.usergroup_id, clothing FROM tblEvents t 
     LEFT JOIN tblUsergroupAssignments t2 
     ON t.usergroup_id = t2.usergroup_id
     LEFT JOIN tblMembers t4 
@@ -68,7 +68,8 @@ function readAttendence($api_token)
                "Departure"      => $departure,
                "Leave_dep"      => $leave_dep,
                "Date"           => $date,
-               "Usergroup_ID"   => $usergroup_id
+               "Usergroup_ID"   => $usergroup_id,
+               "Clothing"       => $clothing
            );
            array_push($attendence_arr, $attendence_item);
        }
