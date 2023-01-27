@@ -69,8 +69,6 @@ switch($_SERVER['REQUEST_METHOD'])
 
 function getAllMembers($api_token)
 {
-    checkIfModified(['tblMembers', 'tblUsergroupAssignments']);
-    //TODO get all users to admin user
     $database = new Database();
     $db_conn = $database->getConnection();
     if(isAdmin($api_token)) {

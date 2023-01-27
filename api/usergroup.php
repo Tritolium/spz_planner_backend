@@ -242,8 +242,6 @@ function getUsergroupBySearch($api_token, $searchterm){
 
 function getOwnUsergroups($api_token)
 {
-    checkIfModified(['tblUsergroups', 'tblUsergroupAssignments']);
-
     $database = new Database();
     $db_conn = $database->getConnection();
 
@@ -282,8 +280,6 @@ function getComplUsergroupAssignment($api_token)
         http_response_code(403);
         exit();
     }
-
-    checkIfModified(['tblUsergroups', 'tblUsergroupAssignments']);
 
     $success = false;
 

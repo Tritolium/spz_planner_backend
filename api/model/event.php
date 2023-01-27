@@ -18,8 +18,6 @@ class Event {
 
     function read($id, $filter, $api_token) : PDOStatement
     {
-        checkIfModified(['tblEvents', 'tblUsergroupAssignments']);
-        //TODO get all events for admin user
         if ($id >= 0) {
             $query = "SELECT * FROM " . $this->table_name . " WHERE event_id = :event_id";
             $stmt = $this->conn->prepare($query);
@@ -27,7 +25,7 @@ class Event {
         } else {
             switch($filter){
             case "current":
-                $query = "SELECT event_id, type, location, date, accepted, begin, departure, leave_dep, t.usergroup_id FROM tblEvents t 
+                $query = "SELECT event_id, type, location, date, accepted, begin, departure, leave_dep, t.usergroup_id, clothing FROM tblEvents t 
                 LEFT JOIN tblUsergroupAssignments t2 
                 ON t.usergroup_id = t2.usergroup_id
                 LEFT JOIN tblMembers t4 
@@ -41,7 +39,7 @@ class Event {
                 $stmt->bindParam(":api_token", $api_token);
                 break;
             case "past":
-                $query = "SELECT event_id, type, location, date, accepted, begin, departure, leave_dep, t.usergroup_id FROM tblEvents t 
+                $query = "SELECT event_id, type, location, date, accepted, begin, departure, leave_dep, t.usergroup_id, clothing FROM tblEvents t 
                 LEFT JOIN tblUsergroupAssignments t2 
                 ON t.usergroup_id = t2.usergroup_id
                 LEFT JOIN tblMembers t4 
@@ -55,7 +53,7 @@ class Event {
                 break;
             default:
             case "all":
-                $query = "SELECT event_id, type, location, date, accepted, begin, departure, leave_dep, t.usergroup_id FROM tblEvents t 
+                $query = "SELECT event_id, type, location, date, accepted, begin, departure, leave_dep, t.usergroup_id, clothing FROM tblEvents t 
                 LEFT JOIN tblUsergroupAssignments t2 
                 ON t.usergroup_id = t2.usergroup_id
                 LEFT JOIN tblMembers t4 
@@ -73,7 +71,7 @@ class Event {
 
     function update($event_data) : bool
     {
-        $query = "UPDATE " . $this->table_name . " SET type = :type, location = :location, date = :date, begin = :begin, departure = :departure, leave_dep = :leave_dep, accepted = :accepted, usergroup_id = :usergroup_id WHERE event_id = :event_id";
+        $query = "UPDATE " . $this->table_name . " SET type = :type, location = :location, date = :date, begin = :begin, departure = :departure, leave_dep = :leave_dep, accepted = :accepted, usergroup_id = :usergroup_id, clothing = :clothing WHERE event_id = :event_id";
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":event_id", $event_data->Event_ID);
@@ -85,6 +83,7 @@ class Event {
         $stmt->bindParam(":leave_dep", $event_data->Leave_dep);
         $stmt->bindParam(":accepted", $event_data->Accepted);
         $stmt->bindParam(":usergroup_id", $event_data->Usergroup_ID);
+        $stmt->bindParam(":clothing", $event_data->Clothing);
 
         if($stmt->execute()){
             return true;
@@ -95,7 +94,7 @@ class Event {
 
     function create($event_data) : bool
     {
-        $query = "INSERT INTO " . $this->table_name . " (type, location, date, begin, departure, leave_dep, usergroup_id) VALUES (:type, :location, :date, :begin, :departure, :leave_dep, :usergroup_id)";
+        $query = "INSERT INTO " . $this->table_name . " (type, location, date, begin, departure, leave_dep, usergroup_id, clothing) VALUES (:type, :location, :date, :begin, :departure, :leave_dep, :usergroup_id, :clothing)";
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":type", $event_data->Type);
@@ -105,6 +104,7 @@ class Event {
         $stmt->bindParam(":departure", $event_data->Departure);
         $stmt->bindParam(":leave_dep", $event_data->Leave_dep);
         $stmt->bindParam(":usergroup_id", $event_data->Usergroup_ID);
+        $stmt->bindParam(":clothing", $event_data->Clothing);
 
         if(!$stmt->execute()){
             return false;

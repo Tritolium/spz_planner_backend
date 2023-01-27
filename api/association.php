@@ -88,8 +88,6 @@ function getAssociations($api_token){
         exit();
     }
 
-    checkIfModified(['tblAssociations']);
-
     $database = new Database();
     $db_conn = $database->getConnection();
 
