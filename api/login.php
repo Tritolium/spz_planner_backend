@@ -40,9 +40,18 @@ case 'login':
             if($statement->execute()){
                 if($statement->rowCount() == 1){
                     $row = $statement->fetch(PDO::FETCH_ASSOC);
+                } else {
+                    http_response_code(406);
+                    exit();
                 }
+            } else {
+                http_response_code(500);
+                exit();
             }
         }
+    } else {
+        http_response_code(500);
+        exit();
     }
 
     if($row !== NULL){
