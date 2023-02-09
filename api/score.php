@@ -63,6 +63,9 @@ function newScore($token, $data) : boolval
         exit();
     }
 
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
     $query = "INSERT INTO tblScores (title, link) VALUES (:title, :link)";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":title", $data->Title);
@@ -77,6 +80,9 @@ function updateScore($token, $id, $data)
         http_response_code(403);
         exit();
     }
+
+    $database = new Database();
+    $db_conn = $database->getConnection();
 
     $query = "UPDATE tblScores SET title=:title, link=:link WHERE score_id=:score_id";
     $statement = $db_conn->prepare($query);
@@ -94,6 +100,9 @@ function deleteScore($token, $id)
         exit();
     }
 
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
     $query = "DELETE FROM tblScores WHERE score_id=:score_id";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":score_id", $id);
@@ -107,6 +116,9 @@ function getScores($token)
         http_response_code(403);
         exit();
     }
+    
+    $database = new Database();
+    $db_conn = $database->getConnection();
 
     $query = "SELECT * FROM tblScores";
     $statement = $db_conn->prepare($query);
@@ -125,12 +137,12 @@ function getScores($token)
         extract($row);
         $score = array(
             "Score_ID"  => $score_id,
-            "Title"     => $tile,
+            "Title"     => $title,
             "Link"      => $link
         );
         array_push($scores_array, $score);
     }
     response_with_data(200, $scores_array);
-    return;
+    return true;
 }
 ?>
