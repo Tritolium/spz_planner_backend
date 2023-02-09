@@ -1,7 +1,6 @@
 <?php
 include_once './config/database.php';
 include_once './util/authorization.php';
-include_once './util/caching.php';
 
 header('content-type: application/json');
 header('Access-Control-Allow-Origin: *');

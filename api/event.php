@@ -1,7 +1,6 @@
 <?php
 include_once './config/database.php';
 include_once './model/event.php';
-include_once './util/caching.php';
 
 $database = new Database();
 

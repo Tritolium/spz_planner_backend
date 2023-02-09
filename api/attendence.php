@@ -1,6 +1,5 @@
 <?php
 include_once './config/database.php';
-include_once './util/caching.php';
 
 if(!isset($_GET['api_token'])){
     http_response_code(401);
