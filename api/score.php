@@ -56,7 +56,7 @@ switch($_SERVER['REQUEST_METHOD'])
         break;
 }
 
-function newScore($token, $data) : boolval
+function newScore($token, $data)
 {
     if(!isAdmin($token)){
         http_response_code(403);
