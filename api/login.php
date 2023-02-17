@@ -1,12 +1,14 @@
 <?php
 include_once './config/database.php';
 
-if($_SERVER['REQUEST_METHOD'] != 'GET'){
+if($_SERVER['REQUEST_METHOD'] != 'POST'){
     http_response_code(501);
     exit();
 }
 
 header('Access-Control-Allow-Origin: *');
+
+$data = json_decode(file_get_contents("php://input"));
 
 $database = new Database();
 $db_conn = $database->getConnection();
@@ -19,13 +21,13 @@ if(!isset($_GET['mode'])){
 
 switch($_GET['mode']){
 case 'login':
-    if(!isset($_GET['name'])){
+    if(!isset($data->Name)){
         http_response_code(400);
         echo('<h>No Name</h>');
         exit();
     }
 
-    $name = '%' . $_GET['name'] . '%';
+    $name = '%' . $data->Name . '%';
 
     $statement = $db_conn->prepare('SELECT forename, surname, auth_level, api_token FROM tblMembers WHERE Nicknames LIKE :name');
     $statement->bindParam(":name", $name);
@@ -63,7 +65,7 @@ case 'login':
             "Auth_level" => $auth_level
         );
 
-        lastLogin($api_token);
+        lastLogin($api_token, $data->DisplayMode, $data->Version);
 
         response_with_data(200, $response_body);
     } else {
@@ -72,14 +74,14 @@ case 'login':
 
     exit();
 case 'update':
-    if(!isset($_GET['api_token'])){
+    if(!isset($data->Token)){
         http_response_code(400);
         echo('<h>No Token</h>');
         exit();
     }
-    $api_token = $_GET['api_token'];
+    $api_token = $data->Token;
 
-    lastLogin($api_token);
+    lastLogin($api_token, $data->DisplayMode, $data->Version);
 
     $statement = $db_conn->prepare('SELECT forename, surname, auth_level FROM tblMembers WHERE api_token = :token');
     $statement->bindParam(":token", $api_token);
@@ -101,14 +103,16 @@ case 'update':
     exit();
 }
 
-function lastLogin($api_token)
+function lastLogin($api_token, $displayMode, $version)
 {
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "UPDATE tblMembers SET last_login=CURRENT_TIMESTAMP WHERE api_token=:api_token";
+    $query = "UPDATE tblMembers SET last_login=CURRENT_TIMESTAMP, last_display=:displaymode, last_version=:version WHERE api_token=:api_token";
     $statement = $db_conn->prepare($query);
     
+    $statement->bindParam(":displaymode", $displayMode);
+    $statement->bindParam(":version", $version);
     $statement->bindParam(":api_token", $api_token);
 
     $statement->execute();
