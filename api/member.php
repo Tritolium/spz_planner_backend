@@ -22,11 +22,6 @@ if(isset($_GET['api_token'])){
     exit();
 }
 
-if($auth_level < 2){
-    http_response_code(403);
-    exit();
-}
-
 switch($_SERVER['REQUEST_METHOD'])
 {
     case 'OPTIONS':
