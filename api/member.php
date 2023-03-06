@@ -48,10 +48,14 @@ switch($_SERVER['REQUEST_METHOD'])
         break;
     case 'GET':
         // SELECT
-        if(isset($_GET['id'])){
-            getMemberById($_GET['id']);
+        if(isset($_GET['birthdate'])){
+            getBirthdays($_GET['api_token']);
         } else {
-            getAllMembers($_GET['api_token']);
+            if(isset($_GET['id'])){
+                getMemberById($_GET['id']);
+            } else {
+                getAllMembers($_GET['api_token']);
+            }
         }
         break;
     case 'PUT':
@@ -75,7 +79,7 @@ function getAllMembers($api_token)
 
         $statement = $db_conn->prepare($query);
     } else {
-        $query = "SELECT tm2.member_id, forename, surname, auth_level, instrument, nicknames FROM
+        $query = "SELECT tm2.member_id, forename, surname, auth_level, instrument, nicknames, birthdate FROM
         (SELECT member_id FROM
         (SELECT usergroup_id FROM tblUsergroupAssignments tua 
         LEFT JOIN tblMembers tm
@@ -113,6 +117,7 @@ function getAllMembers($api_token)
             "Auth_level"    => $auth_level,
             "Instrument"    => $instrument,
             "Nicknames"     => $nicknames,
+            "Birthdate"     => $birthdate,
             "Usergroups"    => getUsergroupAssignments($member_id)
         );
         array_push($member_arr, $member_item);
@@ -151,6 +156,7 @@ function getMemberById($id)
         "Nicknames" => $nicknames,
         "Auth_level" => $auth_level,
         "Instrument" => $instrument,
+        "Birthdate"     => $birthdate,
         "Usergroups" => getUsergroupAssignments($id)
     );
 
@@ -217,5 +223,37 @@ function deleteUsergroupAssignment($usergroup_id, $member_id)
     $statement->bindParam(":member_id", $member_id);
 
     $statement->execute();
+}
+
+function getBirthdays($api_token)
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT forename, surname, birthdate FROM (SELECT member_id FROM (SELECT association_id FROM tblMembers JOIN tblAssociationAssignments ON tblMembers.member_id=tblAssociationAssignments.member_id WHERE api_token=:token) AS assoc JOIN tblAssociationAssignments on assoc.association_id=tblAssociationAssignments.association_id GROUP BY member_id) AS mem JOIN tblMembers ON mem.member_id=tblMembers.member_id";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam("token", $api_token);
+
+    $statement->execute();
+
+    $member_list = array();
+
+    while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+        extract($row);
+        if(!is_null($birthdate)){
+            $member = array(
+                "Fullname"  => $forename . " " . $surname,
+                "Birthday"  => $birthdate
+            );
+    
+            array_push($member_list, $member);
+        }
+        
+    }
+    if(count($member_list)){
+        response_with_data(200, $member_list);
+    } else {
+        http_response_code(204);
+    }
 }
 ?>
