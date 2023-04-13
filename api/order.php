@@ -94,7 +94,12 @@ function getOrders($api_token, $own){
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT order_id, article, size, count, placed, ordered, info, order_state FROM tblOrders JOIN tblMembers ON tblOrders.member_id=tblMembers.member_id WHERE api_token = :token ORDER BY placed, order_id";
+    if($own){
+        $query = "SELECT forename, surname, order_id, article, size, count, placed, ordered, info, order_state FROM tblOrders JOIN tblMembers ON tblOrders.member_id=tblMembers.member_id WHERE api_token = :token ORDER BY placed, order_id";
+    } else {
+        $query = "SELECT forename, surname, order_id, article, size, count, placed, ordered, info, order_state FROM tblOrders JOIN tblMembers ON tblOrders.member_id=tblMembers.member_id ORDER BY placed, order_id";
+    }
+    
 
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":token", $api_token);
@@ -113,6 +118,8 @@ function getOrders($api_token, $own){
     while($row = $statement->fetch(PDO::FETCH_ASSOC)){
         extract($row);
         $order = array(
+            "Forename"      => $forename,
+            "Surname"       => $surname,
             "Order_ID"      => $order_id,
             "Article"       => $article,
             "Size"          => $size,
