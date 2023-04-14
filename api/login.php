@@ -65,7 +65,7 @@ case 'login':
             "Auth_level" => $auth_level
         );
 
-        lastLogin($api_token, $data->DisplayMode, $data->Version);
+        lastLogin($api_token, $data->DisplayMode, $data->Version, $data->Engine, $data->Device);
 
         response_with_data(200, $response_body);
     } else {
@@ -81,7 +81,7 @@ case 'update':
     }
     $api_token = $data->Token;
 
-    lastLogin($api_token, $data->DisplayMode, $data->Version);
+    lastLogin($api_token, $data->DisplayMode, $data->Version, $data->Engine, $data->Device);
 
     $statement = $db_conn->prepare('SELECT forename, surname, auth_level FROM tblMembers WHERE api_token = :token');
     $statement->bindParam(":token", $api_token);
@@ -103,16 +103,17 @@ case 'update':
     exit();
 }
 
-function lastLogin($api_token, $displayMode, $version)
+function lastLogin($api_token, $displayMode, $version, $engine, $device)
 {
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "UPDATE tblMembers SET last_login=CURRENT_TIMESTAMP, last_display=:displaymode, last_version=:version WHERE api_token=:api_token";
+    $query = "UPDATE tblMembers SET last_login=CURRENT_TIMESTAMP, last_display=:displaymode, last_version=:version, u_agent=:u_agent WHERE api_token=:api_token";
     $statement = $db_conn->prepare($query);
     
     $statement->bindParam(":displaymode", $displayMode);
     $statement->bindParam(":version", $version);
+    $statement->bindValue(":u_agent", htmlspecialchars($engine . " " . $device, ENT_QUOTES));
     $statement->bindParam(":api_token", $api_token);
 
     $statement->execute();
