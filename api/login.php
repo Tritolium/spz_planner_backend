@@ -65,7 +65,7 @@ case 'login':
             "Auth_level" => $auth_level
         );
 
-        lastLogin($api_token, $data->DisplayMode, $data->Version, $data->Engine, $data->Device);
+        lastLogin($api_token, $data, 0);
 
         response_with_data(200, $response_body);
     } else {
@@ -81,7 +81,7 @@ case 'update':
     }
     $api_token = $data->Token;
 
-    lastLogin($api_token, $data->DisplayMode, $data->Version, $data->Engine, $data->Device);
+    lastLogin($api_token, $data, 1);
 
     $statement = $db_conn->prepare('SELECT forename, surname, auth_level FROM tblMembers WHERE api_token = :token');
     $statement->bindParam(":token", $api_token);
@@ -103,10 +103,16 @@ case 'update':
     exit();
 }
 
-function lastLogin($api_token, $displayMode, $version, $engine, $device)
+function lastLogin($api_token, $data, $update)
 {
     $database = new Database();
     $db_conn = $database->getConnection();
+
+    $displayMode = $data->DisplayMode;
+    $version = $data->Version;
+    $engine = $data->Engine;
+    $device = $data->Device;
+    $dimension = $data->Dimension;
 
     $query = "UPDATE tblMembers SET last_login=CURRENT_TIMESTAMP, last_display=:displaymode, last_version=:version, u_agent=:u_agent WHERE api_token=:api_token";
     $statement = $db_conn->prepare($query);
@@ -116,6 +122,23 @@ function lastLogin($api_token, $displayMode, $version, $engine, $device)
     $statement->bindValue(":u_agent", htmlspecialchars($engine . " " . $device, ENT_QUOTES));
     $statement->bindParam(":api_token", $api_token);
 
+    $statement->execute();
+
+    $query = "SELECT member_id FROM tblMembers WHERE api_token=:api_token";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":api_token", $api_token);
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    $member_id = $row['member_id'];
+
+    $query = "INSERT INTO tblLogin (member_id, login_update, version, display, dimension, u_agent) VALUES (:member_id, :login_update, :version, :display, :dimension, :u_agent)";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":member_id", $member_id);
+    $statement->bindParam(":login_update", $update);
+    $statement->bindParam(":version", $version);
+    $statement->bindParam(":display", $displayMode);
+    $statement->bindParam(":dimension", $dimension);
+    $statement->bindValue(":u_agent", htmlspecialchars($engine . " " . $device, ENT_QUOTES));
     $statement->execute();
 }
 
