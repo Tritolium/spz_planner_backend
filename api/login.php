@@ -114,7 +114,7 @@ function lastLogin($api_token, $data, $update)
     $device = $data->Device;
     $dimension = NULL;
     if(isset($data->Dimension)){
-        $dimension = $data->dimension;
+        $dimension = $data->Dimension;
     }
     
 
