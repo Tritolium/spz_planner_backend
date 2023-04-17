@@ -112,7 +112,12 @@ function lastLogin($api_token, $data, $update)
     $version = $data->Version;
     $engine = $data->Engine;
     $device = $data->Device;
-    $dimension = $data->Dimension;
+    try {
+        $dimension = $data->Dimension;
+    } catch (Exception $e) {
+        
+    }
+    
 
     $query = "UPDATE tblMembers SET last_login=CURRENT_TIMESTAMP, last_display=:displaymode, last_version=:version, u_agent=:u_agent WHERE api_token=:api_token";
     $statement = $db_conn->prepare($query);
