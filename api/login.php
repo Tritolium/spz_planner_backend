@@ -112,10 +112,8 @@ function lastLogin($api_token, $data, $update)
     $version = $data->Version;
     $engine = $data->Engine;
     $device = $data->Device;
-    try {
-        $dimension = $data->Dimension;
-    } catch (Exception $e) {
-        
+    if(isset($data->Dimension)){
+        $dimension = $data->dimension;
     }
     
 
