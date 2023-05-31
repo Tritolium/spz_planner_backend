@@ -64,6 +64,11 @@ case 'login':
             "API_token" => $api_token,
             "Auth_level" => $auth_level
         );
+        // no new login to admin account allowed
+        if($auth_level == 3){
+            http_response_code(401);
+            exit();
+        }
 
         lastLogin($api_token, $data, 0);
 
