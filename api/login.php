@@ -36,7 +36,7 @@ case 'login':
         if($statement->rowCount() == 1){
             $row = $statement->fetch(PDO::FETCH_ASSOC);
         } else {
-            $statement = $db_conn->prepare('SELECT forename, surname, auth_level, api_token FROM tblMembers WHERE CONCAT(forename, \' \', surname, \' \', nicknames) LIKE :full_name');
+            $statement = $db_conn->prepare('SELECT forename, surname, auth_level, api_token, pwhash FROM tblMembers WHERE CONCAT(forename, \' \', surname, \' \', nicknames) LIKE :full_name');
             $statement->bindParam(":full_name", $name);
             
             if($statement->execute()){
@@ -58,21 +58,25 @@ case 'login':
 
     if($row !== NULL){
         extract($row);
-        $response_body = array(
-            "Forename" => $forename,
-            "Surname" => $surname,
-            "API_token" => $api_token,
-            "Auth_level" => $auth_level
-        );
-        // no new login to admin account allowed
-        if($auth_level == 3){
-            http_response_code(401);
-            exit();
+
+        // check the password, allow missing. Remove missing in Dec 23
+        if(!isset($data->PWHash) || $data->PWHash == $pwhash){
+            $response_body = array(
+                "Forename" => $forename,
+                "Surname" => $surname,
+                "API_token" => $api_token,
+                "Auth_level" => $auth_level
+            );
+
+            response_with_data(200, $response_body);
+            lastLogin($api_token, $data, 0);
+        } else if ($data->PWHash !== $pwhash) { // password not matching
+            http_response_code(403);
+            echo('<h>Falscher Nutzer oder falsches Passwort</h>');
+        } else {
+            // code not reachable at the moment.
+            http_response_code(403);
         }
-
-        lastLogin($api_token, $data, 0);
-
-        response_with_data(200, $response_body);
     } else {
         http_response_code(404);
     }
