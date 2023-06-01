@@ -96,13 +96,15 @@ function getOrders($api_token, $own){
 
     if($own){
         $query = "SELECT forename, surname, order_id, article, size, count, placed, ordered, info, order_state FROM tblOrders JOIN tblMembers ON tblOrders.member_id=tblMembers.member_id WHERE api_token = :token ORDER BY placed, order_id";
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(":token", $api_token);
     } else {
         $query = "SELECT forename, surname, order_id, article, size, count, placed, ordered, info, order_state FROM tblOrders JOIN tblMembers ON tblOrders.member_id=tblMembers.member_id ORDER BY placed, order_id";
+        $statement = $db_conn->prepare($query);
     }
     
 
-    $statement = $db_conn->prepare($query);
-    $statement->bindParam(":token", $api_token);
+    
 
     if(!$statement->execute()){
         return false;
