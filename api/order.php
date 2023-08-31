@@ -3,7 +3,7 @@ include_once './config/database.php';
 
 header('content-type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: PUT, POST, GET, OPTIONS');
+header('Access-Control-Allow-Methods: PUT, POST, GET, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: if-modified-since');
 
 $data = json_decode(file_get_contents('php://input'));
@@ -29,6 +29,13 @@ switch($_SERVER['REQUEST_METHOD'])
         break;
     case 'GET':
         if (!getOrders($_GET['api_token'], isset($_GET['own']))) {
+            http_response_code(500);
+        }
+        break;
+    case 'DELETE':
+        if(deleteOrder($_GET['api_token'], $_GET['id'])){
+            http_response_code(204);
+        } else {
             http_response_code(500);
         }
         break;
@@ -87,6 +94,21 @@ function updateOrder($api_token, $id, $data){
     $statement->bindParam(":order_id", $id);
 
     $statement->execute();
+    return true;
+}
+
+function deleteOrder($api_token, $id){
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "DELETE FROM tblOrders WHERE order_id=:order_id";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":order_id", $id);
+
+    if(!$statement->execute()){
+        return false;
+    }
+
     return true;
 }
 
