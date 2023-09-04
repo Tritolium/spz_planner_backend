@@ -12,15 +12,17 @@ header('Access-Control-Allow-Origin: *');
 switch($_SERVER['REQUEST_METHOD']){
 case 'GET':
     if(isset($_GET['events']) && isset($_GET['usergroup'])){
-        getEventEval($_GET['usergroup']);
-    }
+        getEventEvalByUsergroup($_GET['usergroup']);
+    } else if (isset($_GET['events']) && isset($_GET['id']) && isset($_GET['u_id'])){
+        getEventEvalById($_GET['id'], $_GET['u_id']);
+    }   
     exit();
 default:
     http_response_code(501);
     exit();
 }
 
-function getEventEval($usergroup_id)
+function getEventEvalByUsergroup($usergroup_id)
 {
     $database = new Database();
     $db_conn = $database->getConnection();
@@ -62,6 +64,24 @@ function getEventEval($usergroup_id)
     }
 
     response_with_data(200, $eval);
+}
+
+function getEventEvalById($event_id, $usergroup_id)
+{
+    $consent = getEventConsentCount($event_id, $usergroup_id);
+    $refusal = getEventRefusalCount($event_id, $usergroup_id);
+    $maybe = getEventMaybeCount($event_id, $usergroup_id);
+    $missing = getEventMissingCount($event_id, $usergroup_id);
+
+    $event = array(
+        "Event_ID" => intval($event_id),
+        "Consent"  => $consent,
+        "Refusal"  => $refusal,
+        "Maybe"    => $maybe,
+        "Missing"  => $missing
+    );
+
+    response_with_data(200, $event);
 }
 
 function getEventConsentCount($event_id, $usergroup_id)
