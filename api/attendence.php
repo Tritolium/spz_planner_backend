@@ -19,7 +19,11 @@ case 'GET':
         readAllAttendences($_GET['api_token'], $_GET['usergroup']);
     } else {
         if (isset($_GET['missing'])){
-            readMissingAttendences();
+            $event_id = -1;
+            if(isset($_GET['event_id'])){
+                $event_id = $_GET['event_id'];
+            }
+            readMissingAttendences($event_id);
         } else {
             readAttendence($_GET['api_token']);
         }
@@ -229,50 +233,95 @@ function updateSingleAttendence($member_id, $event_id, $attendence)
     }
 }
 
-function readMissingAttendences()
+function readMissingAttendences($event_id)
 {
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    /*$query = "SELECT * FROM viewMissingAttendence";*/
-    $query = "SELECT forename, surname, type, location, date FROM tblMembers t 
-    JOIN tblUsergroupAssignments t2 
-    ON t.member_id = t2.member_id 
-    JOIN tblEvents t3 
-    ON t2.usergroup_id = t3.usergroup_id 
-    LEFT JOIN tblAttendence t4 
-    ON t.member_id = t4.member_id 
-    AND t3.event_id = t4.event_id 
-    WHERE t3.`date` >= curdate() 
-    AND t3.`date` < date_add(curdate(), interval 2 day)
-    AND t4.attendence is null 
-    GROUP BY t.member_id
-    ORDER BY surname, forename";
+    if($event_id == -1){
+        $query = "SELECT forename, surname, type, location, date FROM tblMembers t 
+        JOIN tblUsergroupAssignments t2 
+        ON t.member_id = t2.member_id 
+        JOIN tblEvents t3 
+        ON t2.usergroup_id = t3.usergroup_id 
+        LEFT JOIN tblAttendence t4 
+        ON t.member_id = t4.member_id 
+        AND t3.event_id = t4.event_id 
+        WHERE t3.`date` >= curdate() 
+        AND t3.`date` < date_add(curdate(), interval 2 day)
+        AND t4.attendence is null 
+        GROUP BY t.member_id
+        ORDER BY surname, forename";
 
-    $statement = $db_conn->prepare($query);
+        $statement = $db_conn->prepare($query);
 
-    $statement->execute();
-    if($statement->rowCount() < 1){
-        http_response_code(204);
+        $statement->execute();
+        if($statement->rowCount() < 1){
+            http_response_code(204);
+        } else {
+            $attendences = array();
+            while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+                extract($row);
+                $missing = array(
+                    "Forename" => $forename,
+                    "Surname"  => $surname,
+                    "Type"     => $type,
+                    "Location" => $location,
+                    "Date"     => $date
+                );
+                array_push($attendences, $missing);
+            }
+            response_with_data(200, $attendences);
+            $headers = array();
+            $headers[] = "From: <podom@t-online.de>";
+            $headers[] = "Content-type: text/html; charset=utf8";
+            mail("podom@t-online.de", "Fehlende Rückmeldungen für heute", json_to_html($attendences), implode("\r\n", $headers));
+        }
     } else {
-        $attendences = array();
+        $query = "SELECT endpoint, authToken, publicKey FROM 
+            (SELECT mem.member_id, attendence FROM 
+            (SELECT tblMembers.member_id, event_id 
+            FROM tblMembers JOIN tblUsergroupAssignments 
+            ON tblMembers.member_id=tblUsergroupAssignments.member_id 
+            JOIN tblEvents 
+            ON tblEvents.usergroup_id=tblUsergroupAssignments.usergroup_id 
+            WHERE event_id=:event_id) AS mem LEFT JOIN tblAttendence 
+            ON mem.member_id=tblAttendence.member_id 
+            AND mem.event_id=tblAttendence.event_id 
+            WHERE attendence IS null 
+            OR attendence = 2) as missing 
+            JOIN tblSubscription 
+            ON missing.member_id = tblSubscription.member_id";
+        
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(":event_id", $event_id);
+
+        if(!$statement->execute()){
+            http_response_code(500);
+            exit();
+        }
+
+        if($statement->rowCount() < 1){
+            http_response_code(204);
+            exit();
+        }
+        
+        $subscriptions = array();
+        
         while($row = $statement->fetch(PDO::FETCH_ASSOC)){
             extract($row);
-            $missing = array(
-                "Forename" => $forename,
-                "Surname"  => $surname,
-                "Type"     => $type,
-                "Location" => $location,
-                "Date"     => $date
+            $sub = array(
+                "endpoint"  => $endpoint,
+                "authToken" => $authToken,
+                "publicKey" => $publicKey
             );
-            array_push($attendences, $missing);
+
+            array_push($subscriptions, $sub);
         }
-        response_with_data(200, $attendences);
-        $headers = array();
-        $headers[] = "From: <podom@t-online.de>";
-        $headers[] = "Content-type: text/html; charset=utf8";
-        mail("podom@t-online.de", "Fehlende Rückmeldungen für heute", json_to_html($attendences), implode("\r\n", $headers));
+
+        response_with_data(200, $subscriptions);
     }
+    
     exit();
 }
 

@@ -33,6 +33,10 @@ switch($_SERVER['REQUEST_METHOD'])
         http_response_code(200);
         break;
     case 'GET':
+        if(isset($_GET['today'])){
+            getTodaysEvents();
+            break;
+        }
         $id = -1;
         $filter = "all";
         if(isset($_GET['filter'])){
@@ -109,5 +113,38 @@ switch($_SERVER['REQUEST_METHOD'])
     default:
         http_response_code(501);
         exit();
+}
+
+function getTodaysEvents()
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT event_id, begin, departure FROM tblEvents WHERE date = curdate() AND accepted = 1";
+    $statement = $db_conn->prepare($query);
+
+    if(!$statement->execute()){
+        http_response_code(500);
+        exit();
+    }
+
+    if($statement->rowCount() < 1){
+        http_response_code(204);
+        exit();
+    }
+
+    $events = array();
+
+    while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+        extract($row);
+        $event = array(
+            "Event_ID"      => intval($event_id),
+            "Begin"         => $begin,
+            "Departure"     => ($departure == "12:34:56") ? null : $departure
+        );
+        array_push($events, $event);
+    }
+
+    response_with_data(200, $events);
 }
 ?>
