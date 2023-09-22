@@ -2,6 +2,7 @@
 include_once './config/database.php';
 
 header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: PUT, POST, GET, DELETE, OPTIONS');
 
 // checks if authorization is given, no validation
 if(!isset($_GET['api_token'])){
@@ -10,6 +11,9 @@ if(!isset($_GET['api_token'])){
 }
 
 switch($_SERVER['REQUEST_METHOD']){
+case 'OPTIONS':
+    http_response_code(200);
+    break;
 case 'GET':
     header("Content-Type: application/json");
     // if id is given in querry
@@ -269,6 +273,7 @@ function readAllAbsences($api_token, $filter)
 
 function updateAbsence($api_token, $absence_id, $data)
 {
+    echo "update " . $absence_id;
     if(!authorizeAlterAbsence($api_token, $absence_id)){
         http_response_code(401);
         exit();
