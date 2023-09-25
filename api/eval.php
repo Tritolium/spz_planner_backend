@@ -10,7 +10,14 @@ header("Content-Type: application/json");
 header('Access-Control-Allow-Origin: *');
 
 switch($_SERVER['REQUEST_METHOD']){
+case 'OPTIONS':
+    http_response_code(200);
+    break;
 case 'GET':
+    if(isset($_GET['version'])){
+        getVersionEval();
+        exit();
+    }
     if(isset($_GET['events']) && isset($_GET['usergroup'])){
         getEventEvalByUsergroup($_GET['usergroup']);
     } else if (isset($_GET['events']) && isset($_GET['id']) && isset($_GET['u_id'])){
@@ -281,6 +288,27 @@ function getEventInstruments($event_id)
         "Pauke"     => $pauke,
         "Lyra"      => $lyra
     );
+}
+
+function getVersionEval()
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT last_version, COUNT(*) AS count FROM tblMembers GROUP BY last_version";
+    $statement = $db_conn->prepare($query);
+    if(!$statement->execute()){
+        http_response_code(500);
+    }
+
+    $versions = array();
+
+    while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+        extract($row);
+        $versions[$last_version] = $count;
+    }
+
+    response_with_data(200, $versions);
 }
 
 ?>
