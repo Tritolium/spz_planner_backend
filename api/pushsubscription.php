@@ -3,7 +3,7 @@ include_once './config/database.php';
 
 header('content-type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: PUT, OPTIONS');
+header('Access-Control-Allow-Methods: GET, PUT, PATCH, OPTIONS');
 
 if(!isset($_GET['api_token'])){
     http_response_code(403);
@@ -29,6 +29,9 @@ switch($_SERVER['REQUEST_METHOD'])
         break;
     case 'PUT':
         updateSubscription($_GET['api_token'], $data);
+        break;
+    case 'PATCH':
+        updateSettings($_GET['endpoint'], $data);
         break;
 }
 
@@ -137,6 +140,25 @@ function updateSubscription($api_token, $data)
         $statement->bindValue(":allowed", $allow);
     }
     $statement->execute();
+}
+
+function updateSettings($endpoint, $data)
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "UPDATE tblSubscription SET allowed=:allowed, event=:event, practice=:practice WHERE endpoint=:endpoint";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":endpoint", $endpoint);
+    $statement->bindParam(":allowed", $data->Allowed);
+    $statement->bindParam(":event", $data->Event);
+    $statement->bindParam(":practice", $data->Practice);
+    
+    if($statement->execute()){
+        http_response_code(200);
+    } else {
+        http_response_code(500);
+    }
 }
 
 ?>
