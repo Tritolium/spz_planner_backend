@@ -95,7 +95,7 @@ function updateSubscription($api_token, $data)
     
     $member_id = $statement->fetch(PDO::FETCH_ASSOC)['member_id'];
 
-    $query = "INSERT INTO tblSubscription (endpoint, authToken, publicKey, member_id) VALUES (:endpoint, :authToken, :publicKey, :member_id) ON DUPLICATE KEY UPDATE authToken=:authToken, publicKey=:publicKey, member_id=:member_id";
+    $query = "INSERT INTO tblSubscription (endpoint, authToken, publicKey, member_id, last_updated) VALUES (:endpoint, :authToken, :publicKey, :member_id, current_timestamp()) ON DUPLICATE KEY UPDATE authToken=:authToken, publicKey=:publicKey, member_id=:member_id, last_updated=current_timestamp()";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":endpoint", $data->endpoint);
     $statement->bindParam(":authToken", $data->authToken);
