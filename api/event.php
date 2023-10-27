@@ -54,6 +54,7 @@ switch($_SERVER['REQUEST_METHOD'])
                     extract($row);
                     $event_item = array(
                         "Event_ID"      => intval($event_id),
+                        "Category"      => $category,
                         "Type"          => $type,
                         "Location"      => $location,
                         "Date"          => $date,
@@ -73,6 +74,7 @@ switch($_SERVER['REQUEST_METHOD'])
                 extract($row);
                 $event = array(
                     "Event_ID"      => intval($event_id),
+                    "Category"      => $category,
                     "Type"          => $type,
                     "Location"      => $location,
                     "Date"          => $date,

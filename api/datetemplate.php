@@ -63,6 +63,7 @@ function getDateTemplates()
                 "DateTemplate_ID"   => intval($datetemplate_id),
                 "Title"             => $title,
                 "Description"       => $description,
+                "Category"          => $category,
                 "Type"              => $type,
                 "Location"          => $location,
                 "Begin"             => $begin,
@@ -87,12 +88,13 @@ function newDateTemplate($template_data)
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "INSERT INTO tblDatetemplates (title, description, type, location, begin, departure, leave_dep, usergroup_id) 
-    VALUES (:title, :description, :type, :location, :begin, :departure, :leave_dep, :usergroup_id)";
+    $query = "INSERT INTO tblDatetemplates (title, description, category, type, location, begin, departure, leave_dep, usergroup_id) 
+    VALUES (:title, :description, :category, :type, :location, :begin, :departure, :leave_dep, :usergroup_id)";
 
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":title", $template_data->Title);
     $statement->bindParam(":description", $template_data->Description);
+    $statement->bindParam(":category", $template_data->Category);
     $statement->bindParam(":type", $template_data->Type);
     $statement->bindParam(":location", $template_data->Location);
     $statement->bindParam(":begin", $template_data->Begin);
@@ -114,13 +116,14 @@ function updateDateTemplate($template_id, $template_data)
     $db_conn = $database->getConnection();
 
     $query = "UPDATE tblDatetemplates SET
-    title=:title, description=:description, type=:type, location=:location, begin=:begin, departure=:departure, leave_dep=:leave_dep, usergroup_id=:usergroup_id
+    title=:title, description=:description, category=:category, type=:type, location=:location, begin=:begin, departure=:departure, leave_dep=:leave_dep, usergroup_id=:usergroup_id
     WHERE datetemplate_id=:datetemplate_id";
 
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":datetemplate_id", $template_id);
     $statement->bindParam(":title", $template_data->Title);
     $statement->bindParam(":description", $template_data->Description);
+    $statement->bindParam(":category", $template_data->Category);
     $statement->bindParam(":type", $template_data->Type);
     $statement->bindParam(":location", $template_data->Location);
     $statement->bindParam(":begin", $template_data->Begin);
