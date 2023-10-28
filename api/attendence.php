@@ -278,6 +278,15 @@ function readMissingAttendences($event_id)
             mail("podom@t-online.de", "Fehlende Rückmeldungen für heute", json_to_html($attendences), implode("\r\n", $headers));
         }
     } else {
+        $query = "SELECT category FROM tblEvents WHERE event_id=:event_id";
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(":event_id", $event_id);
+
+        if(!$statement->execute()){
+            http_response_code(500);
+            exit();
+        }
+
         $query = "SELECT endpoint, authToken, publicKey FROM 
             (SELECT mem.member_id, attendence FROM 
             (SELECT tblMembers.member_id, event_id 
@@ -291,7 +300,20 @@ function readMissingAttendences($event_id)
             WHERE attendence IS null 
             OR attendence = 2) as missing 
             JOIN tblSubscription 
-            ON missing.member_id = tblSubscription.member_id";
+            ON missing.member_id = tblSubscription.member_id 
+            WHERE allowed=1";
+
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        switch($row['category']){
+        case 'practice':
+            $query = $query . " AND practice=1";
+            break;
+        case 'event':
+            $query = $query . " AND event=1";
+            break;
+        default:
+            break;
+        }
         
         $statement = $db_conn->prepare($query);
         $statement->bindParam(":event_id", $event_id);
