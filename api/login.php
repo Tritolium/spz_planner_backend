@@ -29,14 +29,14 @@ case 'login':
 
     $name = '%' . $data->Name . '%';
 
-    $statement = $db_conn->prepare('SELECT forename, surname, auth_level, api_token FROM tblMembers WHERE Nicknames LIKE :name');
+    $statement = $db_conn->prepare('SELECT forename, surname, auth_level, api_token, theme FROM tblMembers WHERE Nicknames LIKE :name');
     $statement->bindParam(":name", $name);
 
     if($statement->execute()){
         if($statement->rowCount() == 1){
             $row = $statement->fetch(PDO::FETCH_ASSOC);
         } else {
-            $statement = $db_conn->prepare('SELECT forename, surname, auth_level, api_token, pwhash FROM tblMembers WHERE CONCAT(forename, \' \', surname, \' \', nicknames) LIKE :full_name');
+            $statement = $db_conn->prepare('SELECT forename, surname, auth_level, api_token, pwhash, theme FROM tblMembers WHERE CONCAT(forename, \' \', surname, \' \', nicknames) LIKE :full_name');
             $statement->bindParam(":full_name", $name);
             
             if($statement->execute()){
@@ -65,7 +65,8 @@ case 'login':
                 "Forename" => $forename,
                 "Surname" => $surname,
                 "API_token" => $api_token,
-                "Auth_level" => $auth_level
+                "Auth_level" => $auth_level,
+                "Theme" => intval($theme)
             );
 
             response_with_data(200, $response_body);
@@ -92,7 +93,7 @@ case 'update':
 
     lastLogin($api_token, $data, 1);
 
-    $statement = $db_conn->prepare('SELECT forename, surname, auth_level FROM tblMembers WHERE api_token = :token');
+    $statement = $db_conn->prepare('SELECT forename, surname, auth_level, theme FROM tblMembers WHERE api_token = :token');
     $statement->bindParam(":token", $api_token);
 
     if($statement->execute()){
@@ -102,7 +103,8 @@ case 'update':
             $response_body = array(
                 "Forename" => $forename,
                 "Surname" => $surname,
-                "Auth_level" => $auth_level
+                "Auth_level" => $auth_level,
+                "Theme" => intval($theme)
             );
             response_with_data(200, $response_body);
         } else {
