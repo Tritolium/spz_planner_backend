@@ -1,6 +1,6 @@
 <?php
 class Database{
-    private $host = "db";
+    private $host = "localhost";
     private $db_name = "spzroenkhausen_planer";
     private $username = "spzroenkhausen_admin";
     private $password = "Spielmannszug";
