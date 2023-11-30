@@ -8,6 +8,9 @@ if(!isset($_GET['api_token'])){
 
 header("Content-Type: application/json");
 header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+
+$data = json_decode(file_get_contents("php://input"));
 
 switch($_SERVER['REQUEST_METHOD']){
 case 'OPTIONS':
@@ -24,6 +27,13 @@ case 'GET':
         getEventEvalById($_GET['id'], $_GET['u_id']);
     }   
     exit();
+case 'POST':
+    if(!isset($_GET['event_id'])){
+        http_response_code(405);
+    } else {
+        setEventEval($_GET['event_id'], $data);
+    }
+    break;
 default:
     http_response_code(501);
     exit();
@@ -309,6 +319,34 @@ function getVersionEval()
     }
 
     response_with_data(200, $versions);
+}
+
+function setEventEval($event_id, $evaluation)
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "INSERT INTO tblAttendence (member_id, event_id, evaluation) VALUES (:member_id, :event_id, :evaluation) ON DUPLICATE KEY UPDATE evaluation=:evaluation";
+    
+    foreach($evaluation as $member_id => $eval){
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(":member_id", $member_id);
+        $statement->bindParam(":event_id", $event_id);
+        $statement->bindParam(":evaluation", $eval);
+        
+        if(!$statement->execute()){
+            http_response_code(500);
+            exit();
+        }
+    }
+
+    $query = "UPDATE tblEvents SET evaluated=1 WHERE event_id=:event_id";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
+    if(!$statement->execute()){
+        http_response_code(500);
+        exit();
+    }
 }
 
 ?>

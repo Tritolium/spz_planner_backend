@@ -63,7 +63,8 @@ switch($_SERVER['REQUEST_METHOD'])
                         "Leave_dep"     => $leave_dep,
                         "Accepted"      => boolval($accepted),
                         "Usergroup_ID"  => intval($usergroup_id),
-                        "Clothing"      => intval($clothing)
+                        "Clothing"      => intval($clothing),
+                        "Evaluated"     => boolval($evaluated),
                     );
                     array_push($event_arr, $event_item);
                 }

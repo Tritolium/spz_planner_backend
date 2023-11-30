@@ -25,7 +25,7 @@ class Event {
         } else {
             switch($filter){
             case "current":
-                $query = "SELECT event_id, category, type, location, date, accepted, begin, departure, leave_dep, t.usergroup_id, clothing FROM tblEvents t 
+                $query = "SELECT event_id, category, type, location, date, accepted, begin, departure, leave_dep, t.usergroup_id, clothing, evaluated FROM tblEvents t 
                 LEFT JOIN tblUsergroupAssignments t2 
                 ON t.usergroup_id = t2.usergroup_id
                 LEFT JOIN tblMembers t4 
@@ -39,7 +39,7 @@ class Event {
                 $stmt->bindParam(":api_token", $api_token);
                 break;
             case "past":
-                $query = "SELECT event_id, category, type, location, date, accepted, begin, departure, leave_dep, t.usergroup_id, clothing FROM tblEvents t 
+                $query = "SELECT event_id, category, type, location, date, accepted, begin, departure, leave_dep, t.usergroup_id, clothing, evaluated FROM tblEvents t 
                 LEFT JOIN tblUsergroupAssignments t2 
                 ON t.usergroup_id = t2.usergroup_id
                 LEFT JOIN tblMembers t4 
@@ -53,7 +53,7 @@ class Event {
                 break;
             default:
             case "all":
-                $query = "SELECT event_id, category, type, location, date, accepted, begin, departure, leave_dep, t.usergroup_id, clothing FROM tblEvents t 
+                $query = "SELECT event_id, category, type, location, date, accepted, begin, departure, leave_dep, t.usergroup_id, clothing, evaluated FROM tblEvents t 
                 LEFT JOIN tblUsergroupAssignments t2 
                 ON t.usergroup_id = t2.usergroup_id
                 LEFT JOIN tblMembers t4 
