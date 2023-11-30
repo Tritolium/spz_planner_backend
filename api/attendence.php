@@ -52,7 +52,7 @@ function readAttendence($api_token, $event_id)
     $db_conn = $database->getConnection();
 
     if($event_id == null){
-        $query = "SELECT events.event_id, type, location, address, date, begin, departure, leave_dep, attendence, usergroup_id, clothing FROM (SELECT event_id, t4.member_id, type, location, address, date, begin, departure, leave_dep, accepted, t2.usergroup_id, clothing FROM tblEvents t 
+        $query = "SELECT events.event_id, category, type, location, address, date, begin, departure, leave_dep, attendence, usergroup_id, clothing FROM (SELECT event_id, category, t4.member_id, type, location, address, date, begin, departure, leave_dep, accepted, t2.usergroup_id, clothing FROM tblEvents t 
         LEFT JOIN tblUsergroupAssignments t2 
         ON t.usergroup_id = t2.usergroup_id
         LEFT JOIN tblMembers t4 
@@ -73,6 +73,7 @@ function readAttendence($api_token, $event_id)
             extract($row);
             $attendence_item = array(
                 "Event_ID"       => intval($event_id),
+                "Category"       => $category,
                 "Attendence"     => (is_null($attendence)) ? -1 : intval($attendence),
                 "Type"           => $type,
                 "Location"       => $location,
