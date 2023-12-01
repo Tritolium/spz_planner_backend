@@ -1,6 +1,6 @@
 <?php
 class Database{
-    private $host = "localhost";
+    private $host = "db";
     private $db_name = "spzroenkhausen_planer";
     private $username = "spzroenkhausen_admin";
     private $password = "Spielmannszug";
@@ -19,6 +19,8 @@ class Database{
             $this->conn->exec("set names utf8mb4");
         } catch(PDOException $exception){
             echo "Connection error: " . $exception->getMessage();
+            http_response_code(503);
+            exit();
         }
 
         return $this->conn;
