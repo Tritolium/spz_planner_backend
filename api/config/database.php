@@ -10,18 +10,27 @@ class Database{
     /**
      * @return PDO Database connection
      */
-    public function getConnection() : PDO{
-
+    public function getConnection() : PDO {
         $this->conn = null;
-
-        try{
-            $this->conn = new PDO("mysql:host=" . $this->host . ";dbname=" . $this->db_name, $this->username, $this->password);
-            $this->conn->exec("set names utf8mb4");
-        } catch(PDOException $exception){
-            echo "Connection error: " . $exception->getMessage();
+    
+        try {
+            $this->createConnection();
+        } catch (PDOException $exception) {
+            $this->handleConnectionError($exception);
         }
-
+    
         return $this->conn;
+    }
+    
+    private function createConnection() {
+        $this->conn = new PDO("mysql:host=" . $this->host . ";dbname=" . $this->db_name, $this->username, $this->password);
+        $this->conn->exec("set names utf8mb4");
+    }
+    
+    private function handleConnectionError(PDOException $exception) {
+        http_response_code(503);
+        echo "Connection error: " . $exception->getMessage();
+        exit();
     }
 }
 
