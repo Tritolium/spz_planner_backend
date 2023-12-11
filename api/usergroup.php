@@ -37,7 +37,7 @@ switch($_SERVER['REQUEST_METHOD'])
             } else {
                 http_response_code(500);
             }
-
+            break;
         }
         
         if(updateUsergroup($_GET['api_token'], $_GET['id'], $data)){
