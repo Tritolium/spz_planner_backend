@@ -17,6 +17,7 @@ case 'OPTIONS':
     http_response_code(200);
     break;
 case 'GET':
+    /* TODO: remove on 1/4/2024 */
     if(isset($_GET['version'])){
         getVersionEval();
         exit();
@@ -354,6 +355,7 @@ function getStatistics()
     response_with_data(200, $stats);
 }
 
+/* TODO: remove on 1/4/2024 */
 function getVersionEval()
 {
     $database = new Database();
