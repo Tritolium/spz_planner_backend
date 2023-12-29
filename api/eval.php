@@ -17,10 +17,17 @@ case 'OPTIONS':
     http_response_code(200);
     break;
 case 'GET':
+    /* TODO: remove on 1/4/2024 */
     if(isset($_GET['version'])){
         getVersionEval();
         exit();
     }
+
+    if(isset($_GET['statistics'])){
+        getStatistics();
+        exit();
+    }
+
     if(isset($_GET['events']) && isset($_GET['usergroup'])){
         getEventEvalByUsergroup($_GET['usergroup']);
     } else if (isset($_GET['events']) && isset($_GET['id']) && isset($_GET['u_id'])){
@@ -300,6 +307,55 @@ function getEventInstruments($event_id)
     );
 }
 
+function getStatistics()
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT last_version, COUNT(*) AS count FROM tblMembers GROUP BY last_version";
+    $statement = $db_conn->prepare($query);
+    if(!$statement->execute()){
+        http_response_code(500);
+    }
+
+    $versions = array();
+
+    while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+        extract($row);
+        $versions[$last_version] = $count;
+    }
+
+    $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) = curdate()";
+
+    $statement = $db_conn->prepare($query);
+    if(!$statement->execute()){
+        http_response_code(500);
+    }
+
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    $calls = $row['calls'];
+
+    $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) = curdate() GROUP BY member_id";
+    
+    $statement = $db_conn->prepare($query);
+    if(!$statement->execute()){
+        http_response_code(500);
+    }
+
+    $daily = $statement->rowCount();
+
+    $stats = array(
+        "Versions" => $versions,
+        "Users" => [
+            "Calls" => $calls,
+            "Daily" => $daily
+        ]
+    );
+
+    response_with_data(200, $stats);
+}
+
+/* TODO: remove on 1/4/2024 */
 function getVersionEval()
 {
     $database = new Database();
