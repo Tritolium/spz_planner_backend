@@ -312,7 +312,7 @@ function getStatistics()
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT last_version, COUNT(*) AS count FROM tblMembers GROUP BY last_version";
+    $query = "SELECT last_version, COUNT(*) AS count FROM (SELECT tblMembers.member_id, last_version FROM tblMembers LEFT JOIN tblUsergroupAssignments ON tblMembers.member_id=tblUsergroupAssignments.member_id WHERE usergroup_id IS NOT null GROUP BY tblMembers.member_id ORDER BY last_version) AS members GROUP BY last_version";
     $statement = $db_conn->prepare($query);
     if(!$statement->execute()){
         http_response_code(500);
