@@ -84,7 +84,7 @@ class Event {
         $stmt->bindParam(":departure", $event_data->Departure);
         $stmt->bindParam(":leave_dep", $event_data->Leave_dep);
         $stmt->bindParam(":accepted", $event_data->Accepted);
-        $stmt->bindParam(":plusone", $event_data->PlusOne);
+        $stmt->bindValue(":plusone", ($event_data->PlusOne == true) ? 1 : 0);
         $stmt->bindParam(":usergroup_id", $event_data->Usergroup_ID);
         $stmt->bindParam(":clothing", $event_data->Clothing);
 
@@ -105,7 +105,7 @@ class Event {
         $stmt->bindParam(":location", $event_data->Location);
         $stmt->bindValue(":address", isset($event_data->Address) ? $event_data->Address : "");
         $stmt->bindParam(":date", $event_data->Date);
-        $stmt->bindParam(":plusone", $event_data->PlusOne);
+        $stmt->bindValue(":plusone", ($event_data->PlusOne == true) ? 1 : 0);
         $stmt->bindParam(":begin", $event_data->Begin);
         $stmt->bindParam(":departure", $event_data->Departure);
         $stmt->bindParam(":leave_dep", $event_data->Leave_dep);
