@@ -63,6 +63,7 @@ switch($_SERVER['REQUEST_METHOD'])
                         "Departure"     => $departure,
                         "Leave_dep"     => $leave_dep,
                         "Accepted"      => boolval($accepted),
+                        "PlusOne"       => boolval($plusone),
                         "Usergroup_ID"  => intval($usergroup_id),
                         "Clothing"      => intval($clothing),
                         "Evaluated"     => boolval($evaluated),
@@ -85,6 +86,7 @@ switch($_SERVER['REQUEST_METHOD'])
                     "Departure"     => $departure,
                     "Leave_dep"     => $leave_dep,
                     "Accepted"      => boolval($accepted),
+                    "PlusOne"       => boolval($plusone),
                     "Usergroup_ID"  => intval($usergroup_id),
                     "Clothing"      => intval($clothing)
                 );
