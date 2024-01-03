@@ -52,7 +52,7 @@ function readAttendence($api_token, $event_id)
     $db_conn = $database->getConnection();
 
     if($event_id == null){
-        $query = "SELECT events.event_id, category, type, location, address, date, begin, departure, leave_dep, attendence, usergroup_id, clothing FROM (SELECT event_id, category, t4.member_id, type, location, address, date, begin, departure, leave_dep, accepted, t2.usergroup_id, clothing FROM tblEvents t 
+        $query = "SELECT events.event_id, category, type, location, address, date, ev_plusone, begin, departure, leave_dep, attendence, usergroup_id, clothing, plusone FROM (SELECT event_id, category, t4.member_id, type, location, address, date, plusone as ev_plusone, begin, departure, leave_dep, accepted, t2.usergroup_id, clothing FROM tblEvents t 
         LEFT JOIN tblUsergroupAssignments t2 
         ON t.usergroup_id = t2.usergroup_id
         LEFT JOIN tblMembers t4 
@@ -78,6 +78,8 @@ function readAttendence($api_token, $event_id)
                 "Type"           => $type,
                 "Location"       => $location,
                 "Address"        => $address,
+                "Ev_PlusOne"     => boolval($ev_plusone),
+                "PlusOne"        => boolval($plusone),
                 "Begin"          => $begin,
                 "Departure"      => $departure,
                 "Leave_dep"      => $leave_dep,
@@ -136,7 +138,7 @@ function readAllAttendences($api_token, $usergroup_id)
     $db_conn = $database->getConnection();
 
     $query = "SELECT users.usergroup_id, users.member_id, forename, surname, 
-    t3.event_id, type, location, date, attendence, evaluation
+    t3.event_id, type, location, date, attendence, evaluation, t4.plusone
     FROM
     (SELECT usergroup_id, t.member_id, forename, surname 
     FROM tblMembers t 
@@ -163,7 +165,8 @@ function readAllAttendences($api_token, $usergroup_id)
             $event_arr = array();
             $att_item = array(
                 "Fullname" => $forename . " " . $surname,
-                "Attendence" => (is_null($attendence)) ? -1 : intval($attendence)
+                "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
+                "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone)
             );
             array_push($event_arr, $att_item);
             while($row = $statement->fetch(PDO::FETCH_ASSOC)){
@@ -171,7 +174,8 @@ function readAllAttendences($api_token, $usergroup_id)
                     extract($row);
                     $att_item = array(
                         "Fullname" => $forename . " " . $surname,
-                        "Attendence" => (is_null($attendence)) ? -1 : intval($attendence)
+                        "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
+                        "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone)
                     );
                     array_push($event_arr, $att_item);
                 } else {
@@ -187,7 +191,8 @@ function readAllAttendences($api_token, $usergroup_id)
                     $event_arr = array();
                     $att_item = array(
                         "Fullname" => $forename . " " . $surname,
-                        "Attendence" => (is_null($attendence)) ? -1 : intval($attendence)
+                        "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
+                        "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone)
                     );
                     array_push($event_arr, $att_item);
                 }
@@ -303,6 +308,7 @@ function updateAttendence($api_token, $changes)
         $row = $statement->fetch(PDO::FETCH_ASSOC);
         extract($row);
         foreach($changes as $event_id => $attendence){
+            print_r($attendence);
             updateSingleAttendence($member_id, $event_id, $attendence);
         }
         http_response_code(200);
@@ -324,20 +330,21 @@ function updateSingleAttendence($member_id, $event_id, $attendence)
     if($statement->rowCount() < 1){
         $query = "INSERT INTO tblAttendence (attendence, member_id, event_id) VALUES (:attendence, :member_id, :event_id)";
         $statement = $db_conn->prepare($query);
-        $statement->bindParam(":attendence", $attendence);
+        $statement->bindParam(":attendence", $attendence[0]);
         $statement->bindParam(":member_id", $member_id);
         $statement->bindParam(":event_id", $event_id);
     } else {
-        $query = "UPDATE tblAttendence SET attendence=:attendence, timestamp=CURRENT_TIMESTAMP() WHERE member_id=:member_id AND event_id=:event_id";
+        $query = "UPDATE tblAttendence SET attendence=:attendence, plusone=:plusone, timestamp=CURRENT_TIMESTAMP() WHERE member_id=:member_id AND event_id=:event_id";
         $statement = $db_conn->prepare($query);
-        $statement->bindParam(":attendence", $attendence);
+        $statement->bindParam(":attendence", $attendence[0]);
+        $statement->bindValue(":plusone", ($attendence[1] == true) ? 1 : 0);
         $statement->bindParam(":member_id", $member_id);
         $statement->bindParam(":event_id", $event_id);
     }
     
     $statement->execute();
 
-    if($attendence == 0) {
+    if($attendence[0] == 0) {
         $query = "SELECT * FROM tblEvents WHERE event_id=:event_id AND date=curdate()";
         $statement = $db_conn->prepare($query);
         $statement->bindParam(":event_id", $event_id);

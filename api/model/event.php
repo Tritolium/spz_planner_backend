@@ -25,7 +25,7 @@ class Event {
         } else {
             switch($filter){
             case "current":
-                $query = "SELECT event_id, category, type, location, address, date, accepted, begin, departure, leave_dep, t.usergroup_id, clothing, evaluated FROM tblEvents t 
+                $query = "SELECT event_id, category, type, location, address, date, accepted, plusone, begin, departure, leave_dep, t.usergroup_id, clothing, evaluated FROM tblEvents t 
                 LEFT JOIN tblUsergroupAssignments t2 
                 ON t.usergroup_id = t2.usergroup_id
                 LEFT JOIN tblMembers t4 
@@ -39,7 +39,7 @@ class Event {
                 $stmt->bindParam(":api_token", $api_token);
                 break;
             case "past":
-                $query = "SELECT event_id, category, type, location, address, date, accepted, begin, departure, leave_dep, t.usergroup_id, clothing, evaluated FROM tblEvents t 
+                $query = "SELECT event_id, category, type, location, address, date, accepted, plusone, begin, departure, leave_dep, t.usergroup_id, clothing, evaluated FROM tblEvents t 
                 LEFT JOIN tblUsergroupAssignments t2 
                 ON t.usergroup_id = t2.usergroup_id
                 LEFT JOIN tblMembers t4 
@@ -53,7 +53,7 @@ class Event {
                 break;
             default:
             case "all":
-                $query = "SELECT event_id, category, type, location, address, date, accepted, begin, departure, leave_dep, t.usergroup_id, clothing, evaluated FROM tblEvents t 
+                $query = "SELECT event_id, category, type, location, address, date, accepted, plusone, begin, departure, leave_dep, t.usergroup_id, clothing, evaluated FROM tblEvents t 
                 LEFT JOIN tblUsergroupAssignments t2 
                 ON t.usergroup_id = t2.usergroup_id
                 LEFT JOIN tblMembers t4 
@@ -71,7 +71,7 @@ class Event {
 
     function update($event_data) : bool
     {
-        $query = "UPDATE " . $this->table_name . " SET category = :category, type = :type, location = :location, address = :address, date = :date, begin = :begin, departure = :departure, leave_dep = :leave_dep, accepted = :accepted, usergroup_id = :usergroup_id, clothing = :clothing WHERE event_id = :event_id";
+        $query = "UPDATE " . $this->table_name . " SET category = :category, type = :type, location = :location, address = :address, date = :date, begin = :begin, departure = :departure, leave_dep = :leave_dep, accepted = :accepted, plusone = :plusone, usergroup_id = :usergroup_id, clothing = :clothing WHERE event_id = :event_id";
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":event_id", $event_data->Event_ID);
@@ -84,6 +84,7 @@ class Event {
         $stmt->bindParam(":departure", $event_data->Departure);
         $stmt->bindParam(":leave_dep", $event_data->Leave_dep);
         $stmt->bindParam(":accepted", $event_data->Accepted);
+        $stmt->bindValue(":plusone", ($event_data->PlusOne == true) ? 1 : 0);
         $stmt->bindParam(":usergroup_id", $event_data->Usergroup_ID);
         $stmt->bindParam(":clothing", $event_data->Clothing);
 
@@ -96,7 +97,7 @@ class Event {
 
     function create($event_data) : bool
     {
-        $query = "INSERT INTO " . $this->table_name . " (category, type, location, address, date, begin, departure, leave_dep, usergroup_id, clothing) VALUES (:category, :type, :location, :address, :date, :begin, :departure, :leave_dep, :usergroup_id, :clothing)";
+        $query = "INSERT INTO " . $this->table_name . " (category, type, location, address, date, plusone, begin, departure, leave_dep, usergroup_id, clothing) VALUES (:category, :type, :location, :address, :date, :plusone, :begin, :departure, :leave_dep, :usergroup_id, :clothing)";
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":type", $event_data->Type);
@@ -104,6 +105,7 @@ class Event {
         $stmt->bindParam(":location", $event_data->Location);
         $stmt->bindValue(":address", isset($event_data->Address) ? $event_data->Address : "");
         $stmt->bindParam(":date", $event_data->Date);
+        $stmt->bindValue(":plusone", ($event_data->PlusOne == true) ? 1 : 0);
         $stmt->bindParam(":begin", $event_data->Begin);
         $stmt->bindParam(":departure", $event_data->Departure);
         $stmt->bindParam(":leave_dep", $event_data->Leave_dep);

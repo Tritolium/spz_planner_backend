@@ -51,7 +51,7 @@ function getEventEvalByUsergroup($usergroup_id)
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT event_id, type, location, date FROM tblEvents WHERE date >= curdate() AND accepted=1 AND usergroup_id=:usergroup_id ORDER BY date";
+    $query = "SELECT event_id, type, location, date, plusone AS ev_plusone FROM tblEvents WHERE date >= curdate() AND accepted=1 AND usergroup_id=:usergroup_id ORDER BY date";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":usergroup_id", $usergroup_id);
     $statement->execute();
@@ -61,7 +61,7 @@ function getEventEvalByUsergroup($usergroup_id)
 
     while($row = $statement->fetch(PDO::FETCH_ASSOC)){
         extract($row);
-        array_push($events, array(intval($event_id), $type, $location, $date));
+        array_push($events, array(intval($event_id), $type, $location, $date, $ev_plusone));
     }
 
     foreach($events as $event_item){
@@ -69,6 +69,7 @@ function getEventEvalByUsergroup($usergroup_id)
         $refusal = getEventRefusalCount($event_item[0], $usergroup_id);
         $maybe = getEventMaybeCount($event_item[0], $usergroup_id);
         $missing = getEventMissingCount($event_item[0], $usergroup_id);
+        $plusone = getEventPlusOneCount($event_item[0], $usergroup_id);
 
         $instruments = getEventInstruments($event_item[0]);
 
@@ -81,6 +82,7 @@ function getEventEvalByUsergroup($usergroup_id)
             "Refusal"  => $refusal,
             "Maybe"    => $maybe,
             "Missing"  => $missing,
+            "PlusOne"  => boolval($event_item[4]) ? intval($plusone) : null,
             "Instruments" => $instruments
         );
 
@@ -96,13 +98,15 @@ function getEventEvalById($event_id, $usergroup_id)
     $refusal = getEventRefusalCount($event_id, $usergroup_id);
     $maybe = getEventMaybeCount($event_id, $usergroup_id);
     $missing = getEventMissingCount($event_id, $usergroup_id);
+    $plusone = getEventPlusOneCount($event_id, $usergroup_id);
 
     $event = array(
         "Event_ID" => intval($event_id),
         "Consent"  => $consent,
         "Refusal"  => $refusal,
         "Maybe"    => $maybe,
-        "Missing"  => $missing
+        "Missing"  => $missing,
+        "PlusOne"  => intval($plusone)
     );
 
     response_with_data(200, $event);
@@ -213,6 +217,29 @@ function getEventmissingCount($event_id, $usergroup_id)
     $row = $statement->fetch(PDO::FETCH_ASSOC);
     $missing = $missing + intval($row["missing"]);
     return $missing;
+}
+
+function getEventPlusOneCount($event_id, $usergroup_id)
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT COUNT(plusone) AS plusone 
+    FROM (SELECT tm.member_id FROM tblMembers tm 
+    left join tblUsergroupAssignments tua 
+    on tm.member_id = tua.member_id 
+    where tua.usergroup_id = :usergroup_id) as users 
+    LEFT JOIN 
+    (SELECT * FROM tblAttendence WHERE event_id=:event_id) AS a 
+    ON users.member_id=a.member_id 
+    WHERE attendence=1 AND plusone=1";
+
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":usergroup_id", $usergroup_id);
+    $statement->bindParam(":event_id", $event_id);
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    return $row["plusone"];
 }
 
 function getEventInstruments($event_id)
