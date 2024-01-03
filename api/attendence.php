@@ -138,7 +138,7 @@ function readAllAttendences($api_token, $usergroup_id)
     $db_conn = $database->getConnection();
 
     $query = "SELECT users.usergroup_id, users.member_id, forename, surname, 
-    t3.event_id, type, location, date, attendence, evaluation
+    t3.event_id, type, location, date, attendence, evaluation, t4.plusone
     FROM
     (SELECT usergroup_id, t.member_id, forename, surname 
     FROM tblMembers t 
@@ -165,7 +165,8 @@ function readAllAttendences($api_token, $usergroup_id)
             $event_arr = array();
             $att_item = array(
                 "Fullname" => $forename . " " . $surname,
-                "Attendence" => (is_null($attendence)) ? -1 : intval($attendence)
+                "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
+                "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone)
             );
             array_push($event_arr, $att_item);
             while($row = $statement->fetch(PDO::FETCH_ASSOC)){
@@ -173,7 +174,8 @@ function readAllAttendences($api_token, $usergroup_id)
                     extract($row);
                     $att_item = array(
                         "Fullname" => $forename . " " . $surname,
-                        "Attendence" => (is_null($attendence)) ? -1 : intval($attendence)
+                        "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
+                        "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone)
                     );
                     array_push($event_arr, $att_item);
                 } else {
@@ -189,7 +191,8 @@ function readAllAttendences($api_token, $usergroup_id)
                     $event_arr = array();
                     $att_item = array(
                         "Fullname" => $forename . " " . $surname,
-                        "Attendence" => (is_null($attendence)) ? -1 : intval($attendence)
+                        "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
+                        "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone)
                     );
                     array_push($event_arr, $att_item);
                 }
