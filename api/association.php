@@ -121,7 +121,7 @@ function getAssociations($api_token){
     while($row = $statement->fetch(PDO::FETCH_ASSOC)){
         extract($row);
         $association = array(
-            "Association_ID"    => $association_id,
+            "Association_ID"    => intval($association_id),
             "Title"             => $title,
             "FirstChair"        => $firstchair,
             "Clerk"             => $clerk,
@@ -175,7 +175,7 @@ function processAssociationAssignmentStatement($statement)
 
         extract($row);
         $association = array(
-            "Association_ID"    => $association_id,
+            "Association_ID"    => intval($association_id),
             "Title"             => $title,
             "Assigned"          => (is_null($assigned)) ? false : true
         );
@@ -204,7 +204,7 @@ function processAssociationAssignmentStatement($statement)
                 $curr_member_id = $member_id;
                 $associations = array();
                 $association = array(
-                    "Association_ID"    => $association_id,
+                    "Association_ID"    => intval($association_id),
                     "Title"             => $title,
                     "Assigned"          => (is_null($assigned)) ? false : true
                 );
