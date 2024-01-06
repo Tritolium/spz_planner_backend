@@ -320,6 +320,11 @@ function updateAttendence($api_token, $changes)
 
 function updateSingleAttendence($member_id, $event_id, $attendence)
 {
+    /* TODO: remove on 1/6/2024 */
+    if (!is_array($attendence)){
+        $attendence = array($attendence, false);
+    }
+
     $database = new Database();
     $db_conn = $database->getConnection();
     $query = "SELECT * FROM tblAttendence WHERE member_id=:member_id AND event_id=:event_id";
