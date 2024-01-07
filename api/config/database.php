@@ -1,10 +1,15 @@
 <?php
 class Database{
-    private $host = "localhost";
+    private $host = "";
     private $db_name = "spzroenkhausen_planer";
     private $username = "spzroenkhausen_admin";
     private $password = "Spielmannszug";
     public $conn;
+
+    function __construct() {
+        $env = parse_ini_file(__DIR__ . '/../.env');
+        $this->host = $env['DB_HOST'];
+    }
 
 
     /**
