@@ -103,12 +103,13 @@ function newUsergroup($api_token, $data){
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "INSERT INTO tblUsergroups (title, is_admin, is_moderator, info) VALUES (:title, :is_admin, :is_moderator, :info)";
+    $query = "INSERT INTO tblUsergroups (title, is_admin, is_moderator, info, association_id) VALUES (:title, :is_admin, :is_moderator, :info, :association_id)";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":title", $data->Title);
-    $statement->bindParam(":is_admin", $data->Admin);
-    $statement->bindParam(":is_moderator", $data->Moderator);
+    $statement->bindParam(":is_admin", $data->Admin === true ? 1 : 0);
+    $statement->bindParam(":is_moderator", $data->Moderator === true ? 1 : 0);
     $statement->bindParam(":info", $data->Info);
+    $statement->bindParam(":association_id", $data->Association_ID);
     if($statement->execute()){
         return true;
     }
@@ -129,13 +130,14 @@ function updateUsergroup($api_token, $id, $data){
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "UPDATE tblUsergroups SET title=:title, is_admin=:is_admin, is_moderator=:is_moderator, info=:info WHERE usergroup_id=:usergroup_id";
+    $query = "UPDATE tblUsergroups SET title=:title, is_admin=:is_admin, is_moderator=:is_moderator, info=:info, association_id=:association_id WHERE usergroup_id=:usergroup_id";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":usergroup_id", $id);
     $statement->bindParam(":title", $data->Title);
-    $statement->bindParam(":is_admin", $data->Admin);
-    $statement->bindParam(":is_moderator", $data->Moderator);
+    $statement->bindValue(":is_admin", $data->Admin === true ? 1 : 0);
+    $statement->bindValue(":is_moderator", $data->Moderator === true ? 1 : 0);
     $statement->bindParam(":info", $data->Info);
+    $statement->bindValue(":association_id", intval($data->Association_ID));
     return $statement->execute();
 }
 
@@ -229,7 +231,8 @@ function getUsergroupBySearch($api_token, $searchterm){
             "Title"         => $title,
             "Admin"         => $is_admin,
             "Moderator"     => $is_moderator,
-            "Info"          => $info
+            "Info"          => $info,
+            "Association_ID"=> intval($association_id)
         );
 
         array_push($group_array, $group);
