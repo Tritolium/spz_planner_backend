@@ -445,6 +445,9 @@ function readMissingAttendences($event_id)
         case 'event':
             $query = $query . " AND event=1";
             break;
+        case 'other':
+            $query = $query . " AND other=1";
+            break;
         default:
             break;
         }
