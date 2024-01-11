@@ -52,7 +52,7 @@ function readAttendence($api_token, $event_id)
     $db_conn = $database->getConnection();
 
     if($event_id == null){
-        $query = "SELECT events.event_id, category, type, location, address, date, ev_plusone, begin, departure, leave_dep, attendence, usergroup_id, clothing, plusone FROM (SELECT event_id, category, t4.member_id, type, location, address, date, plusone as ev_plusone, begin, departure, leave_dep, accepted, t2.usergroup_id, clothing FROM tblEvents t 
+        $query = "SELECT events.event_id, category, type, location, address, date, ev_plusone, begin, departure, leave_dep, attendence, events.usergroup_id, association_id, clothing, plusone FROM (SELECT event_id, category, t4.member_id, type, location, address, date, plusone as ev_plusone, begin, departure, leave_dep, accepted, t2.usergroup_id, clothing FROM tblEvents t 
         LEFT JOIN tblUsergroupAssignments t2 
         ON t.usergroup_id = t2.usergroup_id
         LEFT JOIN tblMembers t4 
@@ -61,6 +61,8 @@ function readAttendence($api_token, $event_id)
         AS events
         LEFT JOIN tblAttendence t3
         ON events.event_id = t3.event_id AND events.member_id = t3.member_id 
+        LEFT JOIN tblUsergroups t5
+        ON events.usergroup_id = t5.usergroup_id
         WHERE date >= curdate()
         ORDER BY date, begin";
 
@@ -85,6 +87,7 @@ function readAttendence($api_token, $event_id)
                 "Leave_dep"      => $leave_dep,
                 "Date"           => $date,
                 "Usergroup_ID"   => $usergroup_id,
+                "Association_ID" => $association_id,
                 "Clothing"       => $clothing
             );
             array_push($attendence_arr, $attendence_item);
