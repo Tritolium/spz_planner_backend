@@ -39,7 +39,7 @@ function getSubscriptionPermissions($endpoint) {
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT allowed, event, practice FROM tblSubscription WHERE endpoint=:endpoint";
+    $query = "SELECT allowed, event, practice, other FROM tblSubscription WHERE endpoint=:endpoint";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":endpoint", $endpoint);
     if(!$statement->execute()){
@@ -51,7 +51,8 @@ function getSubscriptionPermissions($endpoint) {
     $permissions = array(
         "Allowed"   => intval($row['allowed']),
         "Event"     => intval($row['event']),
-        "Practice"  => intval($row['practice'])
+        "Practice"  => intval($row['practice']),
+        "Other"     => intval($row['other'])
     );
 
     response_with_data(200, $permissions);
@@ -147,12 +148,13 @@ function updateSettings($endpoint, $data)
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "UPDATE tblSubscription SET allowed=:allowed, event=:event, practice=:practice WHERE endpoint=:endpoint";
+    $query = "UPDATE tblSubscription SET allowed=:allowed, event=:event, practice=:practice, other=:other WHERE endpoint=:endpoint";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":endpoint", $endpoint);
     $statement->bindParam(":allowed", $data->Allowed);
     $statement->bindParam(":event", $data->Event);
     $statement->bindParam(":practice", $data->Practice);
+    $statement->bindParam(":other", isset($data->Other) ? $data->Other : 1);
     
     if($statement->execute()){
         http_response_code(200);
