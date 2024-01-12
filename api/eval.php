@@ -352,6 +352,8 @@ function getStatistics()
         $versions[$last_version] = $count;
     }
 
+    // today
+
     $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) = curdate()";
 
     $statement = $db_conn->prepare($query);
@@ -360,7 +362,7 @@ function getStatistics()
     }
 
     $row = $statement->fetch(PDO::FETCH_ASSOC);
-    $calls = $row['calls'];
+    $today_calls = intval($row['calls']);
 
     $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) = curdate() GROUP BY member_id";
     
@@ -369,13 +371,94 @@ function getStatistics()
         http_response_code(500);
     }
 
-    $daily = $statement->rowCount();
+    $today_daily = $statement->rowCount();
 
+    // yesterday
+
+    $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) = DATE_SUB(curdate(), INTERVAL 1 DAY)";
+
+    $statement = $db_conn->prepare($query);
+    if(!$statement->execute()){
+        http_response_code(500);
+    }
+
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    $yesterday_calls = intval($row['calls']);
+
+    $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) = DATE_SUB(curdate(), INTERVAL 1 DAY) GROUP BY member_id";
+
+    $statement = $db_conn->prepare($query);
+    if(!$statement->execute()){
+        http_response_code(500);
+    }
+
+    $yesterday_daily = $statement->rowCount();
+
+    // 7 days
+
+    $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(curdate(), INTERVAL 7 DAY)";
+
+    $statement = $db_conn->prepare($query);
+    if(!$statement->execute()){
+        http_response_code(500);
+    }
+
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    $seven_calls = intval($row['calls']);
+
+    $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(curdate(), INTERVAL 7 DAY) GROUP BY member_id";
+
+    $statement = $db_conn->prepare($query);
+    if(!$statement->execute()){
+        http_response_code(500);
+    }
+
+    $seven_daily = $statement->rowCount();
+
+    // 30 days
+
+    $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(curdate(), INTERVAL 30 DAY)";
+
+    $statement = $db_conn->prepare($query);
+    if(!$statement->execute()){
+        http_response_code(500);
+    }
+
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    $thirty_calls = intval($row['calls']);
+    
+    $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(curdate(), INTERVAL 30 DAY) GROUP BY member_id";
+
+    $statement = $db_conn->prepare($query);
+    if(!$statement->execute()){
+        http_response_code(500);
+    }
+
+    $thirty_daily = $statement->rowCount();
+
+    // keep Users.Calls and Users.Daily for backwards compatibility
+    // TODO: remove on 1/4/2024
     $stats = array(
         "Versions" => $versions,
         "Users" => [
-            "Calls" => $calls,
-            "Daily" => $daily
+            "Calls" => $today_calls,
+            "Daily" => $today_daily,
+            "Today" => [
+                "Calls" => $today_calls,
+                "Daily" => $today_daily
+            ],
+            "Yesterday" => [
+                "Calls" => $yesterday_calls,
+                "Daily" => $yesterday_daily
+            ],
+            "Seven" => [
+                "Calls" => $seven_calls,
+                "Daily" => $seven_daily
+            ],
+            "Thirty" => [
+                "Calls" => $thirty_calls,
+                "Daily" => $thirty_daily
+            ]
         ]
     );
 
