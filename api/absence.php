@@ -280,11 +280,12 @@ function updateAbsence($api_token, $absence_id, $data)
     }
     $database = new Database();
     $db_conn = $database->getConnection();
-    $query = "UPDATE tblAbsence SET from_date=:from_date, until_date=:until_date WHERE absence_id=:id";
+    $query = "UPDATE tblAbsence SET from_date=:from_date, until_date=:until_date, info=:info WHERE absence_id=:id";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":id", $absence_id);
     $statement->bindParam(":from_date", $data->From);
     $statement->bindParam(":until_date", $data->Until);
+    $statement->bindParam(":info", $data->Info);
     if(!$statement->execute()){
         return false;
     }
