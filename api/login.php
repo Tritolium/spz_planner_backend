@@ -59,8 +59,8 @@ case 'login':
     if($row !== NULL){
         extract($row);
 
-        // check the password, allow missing. Remove missing in Dec 23
-        if(!isset($data->PWHash) || $data->PWHash == $pwhash){
+        // check the password
+        if($data->PWHash == $pwhash){
             $response_body = array(
                 "Forename" => $forename,
                 "Surname" => $surname,
