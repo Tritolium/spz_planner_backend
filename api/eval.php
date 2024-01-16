@@ -396,7 +396,7 @@ function getStatistics()
 
     // 7 days
 
-    $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(curdate(), INTERVAL 7 DAY)";
+    $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(curdate(), INTERVAL 8 DAY) AND DATE(timestamp) < curdate()";
 
     $statement = $db_conn->prepare($query);
     if(!$statement->execute()){
@@ -406,7 +406,7 @@ function getStatistics()
     $row = $statement->fetch(PDO::FETCH_ASSOC);
     $seven_calls = intval($row['calls']);
 
-    $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(curdate(), INTERVAL 7 DAY) GROUP BY member_id";
+    $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(curdate(), INTERVAL 8 DAY) AND DATE(timestamp) < curdate() GROUP BY member_id";
 
     $statement = $db_conn->prepare($query);
     if(!$statement->execute()){
@@ -417,7 +417,7 @@ function getStatistics()
 
     // 30 days
 
-    $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(curdate(), INTERVAL 30 DAY)";
+    $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(curdate(), INTERVAL 31 DAY) AND DATE(timestamp) < curdate()";
 
     $statement = $db_conn->prepare($query);
     if(!$statement->execute()){
@@ -427,7 +427,7 @@ function getStatistics()
     $row = $statement->fetch(PDO::FETCH_ASSOC);
     $thirty_calls = intval($row['calls']);
     
-    $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(curdate(), INTERVAL 30 DAY) GROUP BY member_id";
+    $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(curdate(), INTERVAL 31 DAY) AND DATE(timestamp) < curdate() GROUP BY member_id";
 
     $statement = $db_conn->prepare($query);
     if(!$statement->execute()){
