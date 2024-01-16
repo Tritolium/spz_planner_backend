@@ -59,6 +59,12 @@ case 'login':
     if($row !== NULL){
         extract($row);
 
+        $err_code = 0;
+
+        if($pwhash == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855") {
+            $err_code = 4;
+        }
+
         // check the password
         if($data->PWHash == $pwhash){
             $response_body = array(
@@ -66,7 +72,8 @@ case 'login':
                 "Surname" => $surname,
                 "API_token" => $api_token,
                 "Auth_level" => $auth_level,
-                "Theme" => intval($theme)
+                "Theme" => intval($theme),
+                "Err" => $err_code
             );
 
             response_with_data(200, $response_body);
