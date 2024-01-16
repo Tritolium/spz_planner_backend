@@ -100,18 +100,26 @@ case 'update':
 
     lastLogin($api_token, $data, 1);
 
-    $statement = $db_conn->prepare('SELECT forename, surname, auth_level, theme FROM tblMembers WHERE api_token = :token');
+    $statement = $db_conn->prepare('SELECT forename, surname, auth_level, theme, pwhash FROM tblMembers WHERE api_token = :token');
     $statement->bindParam(":token", $api_token);
+
+    $err_code = 0;
 
     if($statement->execute()){
         if($statement->rowCount() == 1){
             $row = $statement->fetch(PDO::FETCH_ASSOC);
             extract($row);
+
+            if ($pwhash == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855") {
+                $err_code = 4;
+            }
+
             $response_body = array(
                 "Forename" => $forename,
                 "Surname" => $surname,
                 "Auth_level" => $auth_level,
-                "Theme" => intval($theme)
+                "Theme" => intval($theme),
+                "Err" => $err_code
             );
             response_with_data(200, $response_body);
         } else {
