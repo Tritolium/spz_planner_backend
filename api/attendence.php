@@ -364,8 +364,6 @@ function updateSingleAttendence($member_id, $event_id, $attendence)
             $statement->execute();
             $row = $statement->fetch(PDO::FETCH_ASSOC);
             $fullname = $row['forename'] . " " . $row['surname'];
-
-            mail("podom@t-online.de", "Abmeldung für heute", $fullname . " hat sich für heute abgemeldet", 'From: <podom@t-online.de>');
         }
     }
 }
