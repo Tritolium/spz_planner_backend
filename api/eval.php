@@ -24,7 +24,7 @@ case 'GET':
     }
 
     if(isset($_GET['statistics'])){
-        getStatistics();
+        getStatistics($_GET['api_token']);
         exit();
     }
 
@@ -334,7 +334,7 @@ function getEventInstruments($event_id)
     );
 }
 
-function getStatistics()
+function getStatistics($api_token)
 {
     $database = new Database();
     $db_conn = $database->getConnection();
@@ -436,6 +436,28 @@ function getStatistics()
 
     $thirty_daily = $statement->rowCount();
 
+    $users_today = NULL;
+
+    if(isAdmin($api_token)) {
+        $query = "SELECT forename, surname, timestamp FROM tblLogin LEFT JOIN tblMembers ON tblLogin.member_id=tblMembers.member_id WHERE DATE(timestamp) = curdate() ORDER BY timestamp DESC";
+
+        $statement = $db_conn->prepare($query);
+        if(!$statement->execute()){
+            http_response_code(500);
+        }
+
+        $users_today = array();
+
+        while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+            extract($row);
+            $user = array(
+                "Fullname" => $forename . " " . $surname,
+                "Timestamp" => $timestamp
+            );
+            array_push($users_today, $user);
+        }
+    }
+
     // keep Users.Calls and Users.Daily for backwards compatibility
     // TODO: remove on 1/4/2024
     $stats = array(
@@ -445,7 +467,8 @@ function getStatistics()
             "Daily" => $today_daily,
             "Today" => [
                 "Calls" => $today_calls,
-                "Daily" => $today_daily
+                "Daily" => $today_daily,
+                "Users" => $users_today
             ],
             "Yesterday" => [
                 "Calls" => $yesterday_calls,
