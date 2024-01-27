@@ -1,0 +1,27 @@
+<?php
+$request = $_SERVER['REQUEST_URI'];
+
+if (isset($_GET['api_token'])) {
+    $api_token = $_GET['api_token'];
+} else {
+    http_response_code(403);
+    exit();
+}
+
+// remove /api/v0 from the request
+$request = str_replace('/api/v0', '', $request);
+// remove query string from the request
+$request = explode('?', $request)[0];
+$request = explode('/', $request)[1];
+
+switch ($request) {
+    case 'events':
+        require __DIR__ . '/events.php';
+        break;
+    default:
+        http_response_code(404);
+        require __DIR__ . '/404.php';
+        break;
+}
+
+?>
