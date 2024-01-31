@@ -36,7 +36,11 @@ if (isset($request_exploded[2]) && $request_exploded[2] != '') {
             http_response_code(200);
             break;
         case 'GET':
-            getEvents();
+            if (isset($_GET['next'])) {
+                getNextEvents();
+            } else {
+                getEvents();
+            }
             break;
         case 'POST':
             createEvent();
@@ -181,6 +185,55 @@ function getEvents($id = null) {
 
         response_with_data(200, $events);
     }
+}
+
+function getNextEvents() {
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT * FROM tblEvents
+        WHERE usergroup_id IN 
+            (SELECT usergroup_id FROM tblUsergroupAssignments 
+            WHERE member_id IN
+                (SELECT member_id FROM tblMembers 
+                WHERE api_token = :api_token))
+        AND date >= CURDATE()
+        AND accepted = 1
+        AND category = :category
+        ORDER BY date ASC";
+
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":api_token", $_GET['api_token']);
+    $statement->bindParam(":category", $_GET['next']);
+
+    if (!$statement->execute()) {
+        http_response_code(500);
+        return;
+    }
+    
+    if ($statement->rowCount() < 1) {
+        http_response_code(204);
+        return;
+    }
+
+    $events = array();
+
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    extract($row);
+    array_push($events, intval($event_id));
+    $head_date = new DateTime($date);
+
+    while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+        extract($row);
+        $cur_date = new DateTime($date);
+        $cur_date->modify('-3 day');
+        if ($cur_date <= $head_date) {
+            array_push($events, intval($event_id));
+            $head_date = new DateTime($date);
+        }
+    }
+
+    response_with_data(200, $events);
 }
 
 function updateEvent($id) {
