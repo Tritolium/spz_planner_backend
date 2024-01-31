@@ -1,11 +1,6 @@
 <?php
 include_once './config/database.php';
 
-if($_SERVER['REQUEST_METHOD'] != 'POST'){
-    http_response_code(501);
-    exit();
-}
-
 header('Access-Control-Allow-Origin: *');
 
 $data = json_decode(file_get_contents("php://input"));
@@ -21,6 +16,11 @@ if(!isset($_GET['mode'])){
 
 switch($_GET['mode']){
 case 'login':
+    if($_SERVER['REQUEST_METHOD'] !== 'POST'){
+        http_response_code(405);
+        exit();
+    }
+
     if(!isset($data->Name)){
         http_response_code(400);
         echo('<h>No Name</h>');
@@ -91,6 +91,9 @@ case 'login':
 
     exit();
 case 'update':
+    if($_SERVER['REQUEST_METHOD'] === 'GET'){
+        $data = json_decode($_GET['body']);
+    }
     if(!isset($data->Token)){
         http_response_code(400);
         echo('<h>No Token</h>');
