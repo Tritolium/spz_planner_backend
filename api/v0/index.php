@@ -3,6 +3,8 @@ $request = $_SERVER['REQUEST_URI'];
 
 if (isset($_GET['api_token'])) {
     $api_token = $_GET['api_token'];
+} else if ($request == '/api/v0/error') {
+    // do nothing
 } else {
     http_response_code(403);
     exit();
@@ -17,6 +19,9 @@ $request = explode('/', $request)[1];
 switch ($request) {
     case 'attendence':
         require __DIR__ . '/attendence.php';
+        break;
+    case 'error':
+        require __DIR__ . '/error.php';
         break;
     case 'events':
         require __DIR__ . '/events.php';
