@@ -134,9 +134,10 @@ function getAttendence($event_id) {
         http_response_code(500);
         return;
     }
-
-    $event['Attendence'] = intval($attendence_user['attendence']);
-    $event['PlusOne'] = intval($attendence_user['plusone']);
+    error_reporting(0);
+    $event['Attendence'] = is_null($attendence_user['attendence']) ? -1 : intval($attendence_user['attendence']);
+    $event['PlusOne'] = is_null($attendence_user['plusone']) ? 0 : boolval($attendence_user['plusone']);
+    error_reporting(E_ALL);
 
     response_with_data(200, array(
         'Event' => $event,

@@ -253,8 +253,8 @@ function updateEvent($id) {
     $statement->bindParam(":begin", $data->Begin);
     $statement->bindParam(":departure", $data->Departure);
     $statement->bindParam(":leave_dep", $data->Leave_Dep);
-    $statement->bindParam(":accepted", $data->Accepted);
-    $statement->bindParam(":plusone", $data->PlusOne);
+    $statement->bindValue(":accepted", $data->Accepted ? 1 : 0);
+    $statement->bindValue(":plusone", $data->PlusOne ? 1 : 0);
     $statement->bindParam(":clothing", $data->Clothing);
     $statement->bindParam(":usergroup_id", $data->Usergroup_ID);
     $statement->bindParam(":event_id", $id);
