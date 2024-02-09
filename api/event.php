@@ -127,7 +127,7 @@ function getTodaysEvents()
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT event_id, begin, departure, type, location FROM tblEvents WHERE date = curdate() AND accepted = 1";
+    $query = "SELECT event_id, begin, departure, type, location, category FROM tblEvents WHERE date = curdate() AND accepted = 1";
     $statement = $db_conn->prepare($query);
 
     if(!$statement->execute()){
@@ -149,7 +149,8 @@ function getTodaysEvents()
             "Begin"         => $begin,
             "Departure"     => ($departure == "12:34:56") ? null : $departure,
             "Type"          => $type,
-            "Location"      => $location
+            "Location"      => $location,
+            "Category"      => $category
         );
         array_push($events, $event);
     }
