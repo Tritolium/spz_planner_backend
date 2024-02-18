@@ -159,51 +159,130 @@ function getAttendence($event_id = null) {
             'Attendence' => $attendence
         ));
     } else {
-        // get attendence for all events for the user
-        $query = "SELECT events.event_id, category, type, location, address, date, ev_plusone, begin, departure, leave_dep, attendence, events.usergroup_id, association_id, clothing, plusone FROM (SELECT event_id, category, t4.member_id, type, location, address, date, plusone as ev_plusone, begin, departure, leave_dep, accepted, t2.usergroup_id, clothing FROM tblEvents t 
-        LEFT JOIN tblUsergroupAssignments t2 
-        ON t.usergroup_id = t2.usergroup_id
-        LEFT JOIN tblMembers t4 
-        ON t2.member_id = t4.member_id 
-        WHERE api_token = :api_token AND accepted=1) 
-        AS events
-        LEFT JOIN tblAttendence t3
-        ON events.event_id = t3.event_id AND events.member_id = t3.member_id 
-        LEFT JOIN tblUsergroups t5
-        ON events.usergroup_id = t5.usergroup_id
-        WHERE date >= curdate()
-        ORDER BY date, begin";
+        if (!isset($_GET['usergroup_id'])) {
+            // get attendence for all events for the user
+            $query = "SELECT events.event_id, category, type, location, address, date, ev_plusone, begin, departure, leave_dep, attendence, events.usergroup_id, association_id, clothing, plusone FROM (SELECT event_id, category, t4.member_id, type, location, address, date, plusone as ev_plusone, begin, departure, leave_dep, accepted, t2.usergroup_id, clothing FROM tblEvents t 
+            LEFT JOIN tblUsergroupAssignments t2 
+            ON t.usergroup_id = t2.usergroup_id
+            LEFT JOIN tblMembers t4 
+            ON t2.member_id = t4.member_id 
+            WHERE api_token = :api_token AND accepted=1) 
+            AS events
+            LEFT JOIN tblAttendence t3
+            ON events.event_id = t3.event_id AND events.member_id = t3.member_id 
+            LEFT JOIN tblUsergroups t5
+            ON events.usergroup_id = t5.usergroup_id
+            WHERE date >= curdate()
+            ORDER BY date, begin";
 
-        $statement = $db_conn->prepare($query);
-        $statement->bindParam(":api_token", $_GET['api_token']);
+            $statement = $db_conn->prepare($query);
+            $statement->bindParam(":api_token", $_GET['api_token']);
 
-        if($statement->execute()){
-            $attendence_arr = array();
-            while($row = $statement->fetch(PDO::FETCH_ASSOC)) {
-                extract($row);
-                $attendence_item = array(
-                    "Event_ID"       => intval($event_id),
-                    "Category"       => $category,
-                    "Attendence"     => (is_null($attendence)) ? -1 : intval($attendence),
-                    "Type"           => $type,
-                    "Location"       => $location,
-                    "Address"        => $address,
-                    "Ev_PlusOne"     => boolval($ev_plusone),
-                    "PlusOne"        => boolval($plusone),
-                    "Begin"          => $begin,
-                    "Departure"      => $departure,
-                    "Leave_dep"      => $leave_dep,
-                    "Date"           => $date,
-                    "Usergroup_ID"   => $usergroup_id,
-                    "Association_ID" => $association_id,
-                    "Clothing"       => $clothing
-                );
-                array_push($attendence_arr, $attendence_item);
+            if($statement->execute()){
+                $attendence_arr = array();
+                while($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+                    extract($row);
+                    $attendence_item = array(
+                        "Event_ID"       => intval($event_id),
+                        "Category"       => $category,
+                        "Attendence"     => (is_null($attendence)) ? -1 : intval($attendence),
+                        "Type"           => $type,
+                        "Location"       => $location,
+                        "Address"        => $address,
+                        "Ev_PlusOne"     => boolval($ev_plusone),
+                        "PlusOne"        => boolval($plusone),
+                        "Begin"          => $begin,
+                        "Departure"      => $departure,
+                        "Leave_dep"      => $leave_dep,
+                        "Date"           => $date,
+                        "Usergroup_ID"   => $usergroup_id,
+                        "Association_ID" => $association_id,
+                        "Clothing"       => $clothing
+                    );
+                    array_push($attendence_arr, $attendence_item);
+                }
+                response_with_data(200, $attendence_arr);
+            } else {
+                echo json_encode($statement->errorInfo());
+                http_response_code(500);
             }
-            response_with_data(200, $attendence_arr);
         } else {
-            echo json_encode($statement->errorInfo());
-            http_response_code(500);
+            // get attendence for all members of the usergroup
+            $query = "SELECT users.usergroup_id, users.member_id, forename, surname, 
+                t3.event_id, type, location, date, attendence, evaluation, t4.plusone
+                FROM
+                (SELECT usergroup_id, t.member_id, forename, surname 
+                FROM tblMembers t 
+                LEFT JOIN tblUsergroupAssignments t2 
+                ON t.member_id = t2.member_id 
+                WHERE usergroup_id = :usergroup_id)
+                AS users
+                LEFT JOIN tblEvents t3 
+                ON users.usergroup_id = t3.usergroup_id
+                LEFT JOIN tblAttendence t4 
+                ON users.member_id = t4.member_id 
+                AND t4.event_id = t3.event_id
+                WHERE date >= curdate() AND accepted=1
+                ORDER BY date, begin, surname, forename";
+
+            $statement = $db_conn->prepare($query);
+            $statement->bindValue(':usergroup_id', $_GET['usergroup_id']);
+            
+            if($statement->execute()){
+                $attendence_arr = array();
+                if($row = $statement->fetch(PDO::FETCH_ASSOC)){
+                    extract($row);
+                    $curr_event_id = intval($event_id);
+                    $event_arr = array();
+                    $att_item = array(
+                        "Fullname" => $forename . " " . $surname,
+                        "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
+                        "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone)
+                    );
+                    array_push($event_arr, $att_item);
+                    while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+                        if($curr_event_id == $row['event_id']){
+                            extract($row);
+                            $att_item = array(
+                                "Fullname" => $forename . " " . $surname,
+                                "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
+                                "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone)
+                            );
+                            array_push($event_arr, $att_item);
+                        } else {
+                            $ev = array(
+                                "Type" => $type,
+                                "Location" => $location,
+                                "Date" => $date,
+                                "Attendences" => $event_arr
+                            );
+                            array_push($attendence_arr, $ev);
+                            extract($row);
+                            $curr_event_id = $event_id;
+                            $event_arr = array();
+                            $att_item = array(
+                                "Fullname" => $forename . " " . $surname,
+                                "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
+                                "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone)
+                            );
+                            array_push($event_arr, $att_item);
+                        }
+                    }
+
+                    $ev = array(
+                        "Type" => $type,
+                        "Location" => $location,
+                        "Date" => $date,
+                        "Attendences" => $event_arr
+                    );
+                    array_push($attendence_arr, $ev);
+
+                    response_with_data(200, $attendence_arr);
+                } else {
+                    http_response_code(204);
+                }
+                exit();
+            }
         }
     }
 }
