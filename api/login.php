@@ -162,7 +162,34 @@ function lastLogin($api_token, $data, $update)
     $statement->bindParam(":api_token", $api_token);
     $statement->execute();
     $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+    // for some reason, this code can be reached without a valid token. Nullify the member_id in this case.
+    $row['member_id'] = $row['member_id'] ?? NULL;
+
     $member_id = $row['member_id'];
+
+    // if the member_id is NULL, the token is invalid. Do not log the login, send a mail to the admin.
+    if($member_id === NULL){
+        // get mail address from .env
+        $env = parse_ini_file("./.env");
+        $recipient = $env['ADMIN_MAIL'];
+        $subject = "Invalid API Token";
+        
+        $token = "<p>API Token: " . $api_token . "</p>";
+        $display = "<p>Display Mode: " . $displayMode . "</p>";
+        $ver = "<p>Version: " . $version . "</p>";
+        $ua = "<p>User Agent: " . htmlspecialchars($engine . " " . $device, ENT_QUOTES) . "</p>";
+        $dim = "<p>Dimension: " . $dimension . "</p>";
+        $name = isset($data->Name) ? "<p>Name: " . $data->Name . "</p>" : "<p>Name: not set</p>";
+
+        $message = "<html><body>" . $token . $display . $ver . $ua . $dim . $name . "</body></html>";
+
+        $headers = "From: <" . $env['ADMIN_MAIL'] . ">";
+
+        mail($recipient, $subject, $message, $headers);
+
+        return;
+    }
 
     $query = "INSERT INTO tblLogin (member_id, login_update, version, display, dimension, u_agent) VALUES (:member_id, :login_update, :version, :display, :dimension, :u_agent)";
     $statement = $db_conn->prepare($query);
