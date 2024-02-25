@@ -339,6 +339,12 @@ function getStatistics($api_token)
     $database = new Database();
     $db_conn = $database->getConnection();
 
+    $date = date("Y-m-d");
+
+    if(isset($_GET['date'])){
+        $date = $_GET['date'];        
+    }
+
     $query = "SELECT last_version, COUNT(*) AS count FROM (SELECT tblMembers.member_id, last_version FROM tblMembers LEFT JOIN tblUsergroupAssignments ON tblMembers.member_id=tblUsergroupAssignments.member_id WHERE usergroup_id IS NOT null GROUP BY tblMembers.member_id ORDER BY last_version) AS members GROUP BY last_version";
     $statement = $db_conn->prepare($query);
     if(!$statement->execute()){
@@ -354,9 +360,10 @@ function getStatistics($api_token)
 
     // today
 
-    $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) = curdate()";
+    $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) = :date";
 
     $statement = $db_conn->prepare($query);
+    $statement->bindParam(":date", $date);
     if(!$statement->execute()){
         http_response_code(500);
     }
@@ -364,9 +371,10 @@ function getStatistics($api_token)
     $row = $statement->fetch(PDO::FETCH_ASSOC);
     $today_calls = intval($row['calls']);
 
-    $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) = curdate() GROUP BY member_id";
+    $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) = :date GROUP BY member_id";
     
     $statement = $db_conn->prepare($query);
+    $statement->bindParam(":date", $date);
     if(!$statement->execute()){
         http_response_code(500);
     }
@@ -375,9 +383,10 @@ function getStatistics($api_token)
 
     // yesterday
 
-    $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) = DATE_SUB(curdate(), INTERVAL 1 DAY)";
+    $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) = DATE_SUB(:date, INTERVAL 1 DAY)";
 
     $statement = $db_conn->prepare($query);
+    $statement->bindParam(":date", $date);
     if(!$statement->execute()){
         http_response_code(500);
     }
@@ -385,9 +394,10 @@ function getStatistics($api_token)
     $row = $statement->fetch(PDO::FETCH_ASSOC);
     $yesterday_calls = intval($row['calls']);
 
-    $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) = DATE_SUB(curdate(), INTERVAL 1 DAY) GROUP BY member_id";
+    $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) = DATE_SUB(:date, INTERVAL 1 DAY) GROUP BY member_id";
 
     $statement = $db_conn->prepare($query);
+    $statement->bindParam(":date", $date);
     if(!$statement->execute()){
         http_response_code(500);
     }
@@ -396,9 +406,10 @@ function getStatistics($api_token)
 
     // 7 days
 
-    $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(curdate(), INTERVAL 8 DAY) AND DATE(timestamp) < curdate()";
+    $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(:date, INTERVAL 8 DAY) AND DATE(timestamp) < :date";
 
     $statement = $db_conn->prepare($query);
+    $statement->bindParam(":date", $date);
     if(!$statement->execute()){
         http_response_code(500);
     }
@@ -406,9 +417,10 @@ function getStatistics($api_token)
     $row = $statement->fetch(PDO::FETCH_ASSOC);
     $seven_calls = intval($row['calls']);
 
-    $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(curdate(), INTERVAL 8 DAY) AND DATE(timestamp) < curdate() GROUP BY member_id";
+    $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(:date, INTERVAL 8 DAY) AND DATE(timestamp) < :date GROUP BY member_id";
 
     $statement = $db_conn->prepare($query);
+    $statement->bindParam(":date", $date);
     if(!$statement->execute()){
         http_response_code(500);
     }
@@ -417,9 +429,10 @@ function getStatistics($api_token)
 
     // 30 days
 
-    $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(curdate(), INTERVAL 31 DAY) AND DATE(timestamp) < curdate()";
+    $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(:date, INTERVAL 31 DAY) AND DATE(timestamp) < :date";
 
     $statement = $db_conn->prepare($query);
+    $statement->bindParam(":date", $date);
     if(!$statement->execute()){
         http_response_code(500);
     }
@@ -427,9 +440,10 @@ function getStatistics($api_token)
     $row = $statement->fetch(PDO::FETCH_ASSOC);
     $thirty_calls = intval($row['calls']);
     
-    $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(curdate(), INTERVAL 31 DAY) AND DATE(timestamp) < curdate() GROUP BY member_id";
+    $query = "SELECT COUNT(*) AS daily FROM tblLogin WHERE DATE(timestamp) >= DATE_SUB(:date, INTERVAL 31 DAY) AND DATE(timestamp) < :date GROUP BY member_id";
 
     $statement = $db_conn->prepare($query);
+    $statement->bindParam(":date", $date);
     if(!$statement->execute()){
         http_response_code(500);
     }
@@ -439,9 +453,10 @@ function getStatistics($api_token)
     $users_today = NULL;
 
     if(isAdmin($api_token)) {
-        $query = "SELECT forename, surname, timestamp FROM tblLogin LEFT JOIN tblMembers ON tblLogin.member_id=tblMembers.member_id WHERE DATE(timestamp) = curdate() ORDER BY timestamp DESC";
+        $query = "SELECT forename, surname, timestamp FROM tblLogin LEFT JOIN tblMembers ON tblLogin.member_id=tblMembers.member_id WHERE DATE(timestamp) = :date ORDER BY timestamp DESC";
 
         $statement = $db_conn->prepare($query);
+        $statement->bindParam(":date", $date);
         if(!$statement->execute()){
             http_response_code(500);
         }
