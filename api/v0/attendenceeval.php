@@ -92,7 +92,7 @@ function getAttendenceEval($event_id = null) {
         $usergroup_id = $_GET['usergroup_id'];
 
         $query = "SELECT users.usergroup_id, users.member_id, forename, surname, 
-            t3.event_id, type, location, date, attendence, evaluation
+            t3.event_id, type, location, date, attendence, evaluation, category
             FROM
             (SELECT usergroup_id, t.member_id, forename, surname 
             FROM tblMembers t 
@@ -135,6 +135,7 @@ function getAttendenceEval($event_id = null) {
                             "Type" => $type,
                             "Location" => $location,
                             "Date" => $date,
+                            "Category" => $category,
                             "Evaluations" => $event_arr
                         );
                         array_push($attendence_arr, $ev);
@@ -153,6 +154,7 @@ function getAttendenceEval($event_id = null) {
                     "Type" => $type,
                     "Location" => $location,
                     "Date" => $date,
+                    "Category" => $category,
                     "Evaluations" => $event_arr
                 );
                 array_push($attendence_arr, $ev);
