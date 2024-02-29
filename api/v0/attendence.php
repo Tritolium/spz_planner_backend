@@ -105,10 +105,11 @@ function getAttendence($event_id = null) {
         $prob_missing = 0;
 
         while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+            if(!isset($row['attendence'])){
+                $missing = intval($row['COUNT(*)']);
+                continue;
+            }
             switch ($row['attendence']) {
-                case null:
-                    $missing = intval($row['COUNT(*)']);
-                    break;
                 case 0:
                     $refusal = intval($row['COUNT(*)']);
                     break;
