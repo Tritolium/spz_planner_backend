@@ -101,6 +101,8 @@ function getAttendence($event_id = null) {
         $maybe = 0;
         $missing = 0;
         $plusone = 0;
+        $prob_attending = 0;
+        $prob_missing = 0;
 
         while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
             switch ($row['attendence']) {
@@ -122,12 +124,16 @@ function getAttendence($event_id = null) {
             }
         }
 
+        [$prob_attending, $prob_missing] = predictAttendence($event_id);
+
         $attendence = array(
             "Event_ID" => $event_id,
             "Consent" => $consent,
             "Refusal" => $refusal,
             "Maybe" => $maybe,
             "Missing" => $missing,
+            "ProbAttending" => $prob_attending,
+            "ProbMissing" => $prob_missing,
             "PlusOne" => $plusone
         );
 
@@ -315,4 +321,97 @@ function updateAttendence($event_id) {
     } else {
         http_response_code(500);
     }
+}
+
+function predictAttendence($event_id) {
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT * FROM tblEvents WHERE event_id=:event_id";
+
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
+    
+    if ($statement->execute()) {
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        extract($row);
+        $event = array(
+            "Event_ID" => $event_id,
+            "Type" => $type,
+            "Location" => $location,
+            "Address" => $address,
+            "Category" => $category,
+            "Date" => $date,
+            "Begin" => $begin,
+            "Departure" => $departure,
+            "Leave_dep" => $leave_dep,
+            "Ev_PlusOne" => boolval($plusone),
+            "Clothing" => $clothing,
+            "Usergroup_ID" => $usergroup_id,
+        );
+    } else {
+        http_response_code(500);
+        return;
+    }
+
+    $query = "SELECT tblUsergroupAssignments.member_id FROM `tblEvents` 
+        LEFT JOIN tblUsergroupAssignments 
+        ON tblEvents.usergroup_id=tblUsergroupAssignments.usergroup_id 
+        LEFT JOIN tblAttendence 
+        ON tblEvents.event_id=tblAttendence.event_id 
+        AND tblUsergroupAssignments.member_id=tblAttendence.member_id 
+        WHERE tblEvents.event_id=:event_id 
+        AND attendence IS NULL";
+
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
+
+    if (!$statement->execute()) {
+        http_response_code(500);
+        return;
+    }
+
+    $prob_missing = 0;
+    $prob_attending = 0;
+
+    $members = array();
+
+    while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+        array_push($members, $row['member_id']);
+    }
+
+    // iterate over members
+    foreach ($members as $member_id) {
+        $query = "SELECT evaluation, COUNT(*) FROM tblAttendence WHERE member_id=:member_id AND evaluation IS NOT NULL GROUP BY evaluation";
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(":member_id", $member_id);
+
+        if (!$statement->execute()) {
+            http_response_code(500);
+            return;
+        }
+
+        $okay = 0;
+        $not_okay = 0;
+
+        while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+            switch ($row['evaluation']) {
+            case 0:
+            case 1:
+                $not_okay += intval($row['COUNT(*)']);
+                break;
+            default:
+                $okay += intval($row['COUNT(*)']);
+                break;
+            }
+        }
+
+        if ($not_okay / ($not_okay + $okay) >= 0.1) {
+            $prob_missing += 1;
+        } else {
+            $prob_attending += 1;
+        }
+    }
+
+    return [$prob_attending, $prob_missing];
 }
