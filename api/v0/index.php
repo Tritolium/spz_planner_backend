@@ -29,6 +29,9 @@ switch ($request) {
     case 'events':
         require __DIR__ . '/events.php';
         break;
+    case 'pushsubscription':
+        require __DIR__ . '/pushsubscription.php';
+        break;
     default:
         http_response_code(404);
         require __DIR__ . '/404.php';
