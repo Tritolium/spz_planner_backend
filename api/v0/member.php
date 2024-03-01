@@ -95,12 +95,24 @@ function getMember($member_id) {
             exit();
         }
 
-        $member = $stmt->fetch(PDO::FETCH_ASSOC);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($member == null) {
+        if ($row == null) {
             http_response_code(204);
             exit();
         }
+
+        extract($row);
+
+        $member = array(
+            'Member_ID' => $member_id,
+            'Forename' => $forename,
+            'Surname' => $surname,
+            'Auth_level' => $auth_level,
+            'Nicknames' => $nicknames,
+            'Birthdate' => $birthdate,
+            'Theme' => $theme
+        );
 
         http_response_code(200);
         echo json_encode($member);
