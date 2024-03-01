@@ -134,6 +134,11 @@ case 'update':
 
 function lastLogin($api_token, $data, $update)
 {
+    // ignore the login if the referrer is alpha/index.html
+    if ($_SERVER['HTTP_REFERER'] === "https://spzroenkhausen.bplaced.net/alpha/index.html") {
+        return;
+    }
+
     $database = new Database();
     $db_conn = $database->getConnection();
 
@@ -188,6 +193,11 @@ function lastLogin($api_token, $data, $update)
 
         mail($recipient, $subject, $message, $headers);
 
+        return;
+    }
+
+    // ignore the login if the referrer is alpha/index.html
+    if ($_SERVER['HTTP_REFERER'] === "https://spzroenkhausen.bplaced.net/alpha/index.html") {
         return;
     }
 
