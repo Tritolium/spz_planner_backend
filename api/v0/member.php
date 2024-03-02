@@ -119,4 +119,33 @@ function getMember($member_id) {
     }
 }
 
+function createMember() {
+    require_once __DIR__ . '/../config/database.php';
+
+    $database = new Database();
+    $conn = $database->getConnection();
+
+    $data = json_decode(file_get_contents('php://input'));
+
+    $query = "INSERT INTO tblMembers (forename, surname, auth_level, nicknames, birthdate) 
+        VALUES (:forename, :surname, :auth_level, :nicknames, :birthdate)";
+    
+    $stmt = $conn->prepare($query);
+    $stmt->bindParam(':forename', $data->Forename);
+    $stmt->bindParam(':surname', $data->Surname);
+    $stmt->bindParam(':auth_level', $data->Auth_level);
+    $stmt->bindParam(':nicknames', $data->Nicknames);
+    $stmt->bindValue(':birthdate', ($data->Birthdate == "") ? null : $data->Birthdate);
+    
+    if (!$stmt->execute()) {
+        http_response_code(500);
+        exit();
+    }
+    
+    $data->Member_ID = $conn->lastInsertId();
+
+    http_response_code(201);
+    echo json_encode($data);
+}
+
 ?>
