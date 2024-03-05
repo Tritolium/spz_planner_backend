@@ -127,8 +127,8 @@ function createMember() {
 
     $data = json_decode(file_get_contents('php://input'));
 
-    $query = "INSERT INTO tblMembers (forename, surname, auth_level, nicknames, birthdate) 
-        VALUES (:forename, :surname, :auth_level, :nicknames, :birthdate)";
+    $query = "INSERT INTO tblMembers (forename, surname, auth_level, nicknames, birthdate, api_token) 
+        VALUES (:forename, :surname, :auth_level, :nicknames, :birthdate, :api_token)";
     
     $stmt = $conn->prepare($query);
     $stmt->bindParam(':forename', $data->Forename);
@@ -136,6 +136,7 @@ function createMember() {
     $stmt->bindParam(':auth_level', $data->Auth_level);
     $stmt->bindParam(':nicknames', $data->Nicknames);
     $stmt->bindValue(':birthdate', ($data->Birthdate == "") ? null : $data->Birthdate);
+    $stmt->bindValue(':api_token', hash('md5', rand()));
     
     if (!$stmt->execute()) {
         http_response_code(500);
