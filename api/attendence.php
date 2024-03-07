@@ -429,7 +429,8 @@ function readMissingAttendences($event_id)
             ON tblMembers.member_id=tblUsergroupAssignments.member_id 
             JOIN tblEvents 
             ON tblEvents.usergroup_id=tblUsergroupAssignments.usergroup_id 
-            WHERE event_id=:event_id) AS mem LEFT JOIN tblAttendence 
+            WHERE event_id=:event_id
+            AND type NOT LIKE '%Abgesagt%') AS mem LEFT JOIN tblAttendence 
             ON mem.member_id=tblAttendence.member_id 
             AND mem.event_id=tblAttendence.event_id 
             WHERE attendence IS null 
