@@ -32,14 +32,18 @@ switch($_SERVER['REQUEST_METHOD'])
             } else {
                 http_response_code(500);
             }
-
-        }
-
-        if(updateAssociation($_GET['api_token'], $_GET['id'], $data)){
-            http_response_code(200);
         } else {
-            http_response_code(500);
+            if(!isset($_GET['id'])){
+                http_response_code(400);
+            } else {
+                if(updateAssociation($_GET['api_token'], $_GET['id'], $data)){
+                    http_response_code(200);
+                } else {
+                    http_response_code(500);
+                }
+            }
         }
+
         break;
     case 'GET':
         if(isset($_GET['assign'])){
