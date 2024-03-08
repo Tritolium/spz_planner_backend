@@ -17,6 +17,9 @@ $request = explode('?', $request)[0];
 $request = explode('/', $request)[1];
 
 switch ($request) {
+    case 'association':
+        require __DIR__ . '/association.php';
+        break;
     case 'attendence':
         require __DIR__ . '/attendence.php';
         break;
