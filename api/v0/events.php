@@ -296,6 +296,38 @@ function createEvent() {
 
     $data->Event_ID = intval($db_conn->lastInsertId());
 
+    // get all members that are absent on the event date and are in the usergroup
+    $query = "SELECT member_id FROM tblAbsence WHERE from_date <= :event_date AND until_date >= :event_date AND member_id IN (SELECT member_id FROM tblUsergroupAssignments WHERE usergroup_id = :usergroup_id)";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_date", $data->Date);
+    $statement->bindParam(":usergroup_id", $data->Usergroup_ID);
+
+    if (!$statement->execute()) {
+        http_response_code(500);
+        exit();
+    }
+
+    $members = array();
+
+    while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+        extract($row);
+        array_push($members, intval($member_id));
+    }
+
+    // update the attendence of the absent members
+    foreach ($members as $member_id) {
+        $query = "INSERT INTO tblAttendence (member_id, event_id, attendence) VALUES (:member_id, :event_id, 0) ON DUPLICATE KEY UPDATE attendence = 0";
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(":member_id", $member_id);
+        $statement->bindParam(":event_id", $data->Event_ID);
+
+        if (!$statement->execute()) {
+            http_response_code(500);
+            exit();
+        }
+    }
+
+
     response_with_data(201, $data);
 }
 
