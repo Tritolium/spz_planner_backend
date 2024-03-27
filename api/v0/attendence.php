@@ -328,33 +328,6 @@ function predictAttendence($event_id) {
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT * FROM tblEvents WHERE event_id=:event_id";
-
-    $statement = $db_conn->prepare($query);
-    $statement->bindParam(":event_id", $event_id);
-    
-    if ($statement->execute()) {
-        $row = $statement->fetch(PDO::FETCH_ASSOC);
-        extract($row);
-        $event = array(
-            "Event_ID" => $event_id,
-            "Type" => $type,
-            "Location" => $location,
-            "Address" => $address,
-            "Category" => $category,
-            "Date" => $date,
-            "Begin" => $begin,
-            "Departure" => $departure,
-            "Leave_dep" => $leave_dep,
-            "Ev_PlusOne" => boolval($plusone),
-            "Clothing" => $clothing,
-            "Usergroup_ID" => $usergroup_id,
-        );
-    } else {
-        http_response_code(500);
-        return;
-    }
-
     $query = "SELECT tblUsergroupAssignments.member_id FROM `tblEvents` 
         LEFT JOIN tblUsergroupAssignments 
         ON tblEvents.usergroup_id=tblUsergroupAssignments.usergroup_id 
