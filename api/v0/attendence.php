@@ -328,33 +328,6 @@ function predictAttendence($event_id) {
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT * FROM tblEvents WHERE event_id=:event_id";
-
-    $statement = $db_conn->prepare($query);
-    $statement->bindParam(":event_id", $event_id);
-    
-    if ($statement->execute()) {
-        $row = $statement->fetch(PDO::FETCH_ASSOC);
-        extract($row);
-        $event = array(
-            "Event_ID" => $event_id,
-            "Type" => $type,
-            "Location" => $location,
-            "Address" => $address,
-            "Category" => $category,
-            "Date" => $date,
-            "Begin" => $begin,
-            "Departure" => $departure,
-            "Leave_dep" => $leave_dep,
-            "Ev_PlusOne" => boolval($plusone),
-            "Clothing" => $clothing,
-            "Usergroup_ID" => $usergroup_id,
-        );
-    } else {
-        http_response_code(500);
-        return;
-    }
-
     $query = "SELECT tblUsergroupAssignments.member_id FROM `tblEvents` 
         LEFT JOIN tblUsergroupAssignments 
         ON tblEvents.usergroup_id=tblUsergroupAssignments.usergroup_id 
@@ -383,9 +356,27 @@ function predictAttendence($event_id) {
 
     // iterate over members
     foreach ($members as $member_id) {
-        $query = "SELECT evaluation, COUNT(*) FROM tblAttendence WHERE member_id=:member_id AND evaluation IS NOT NULL GROUP BY evaluation";
+        /*
+        * Get the last 10 attendences of the member for events of the same category
+        * and calculate the probability of the member attending the event, based on the
+        * evaluation of the attendences.
+        * Limit the attendences to the last 10 to prevent the model from being biased.
+        *
+        * Adjust the limit over time to get a better prediction.
+        */
+        $query = "SELECT evaluation, COUNT(*) FROM 
+            (SELECT evaluation FROM tblAttendence 
+            LEFT JOIN tblEvents 
+            ON tblAttendence.event_id=tblEvents.event_id 
+            WHERE member_id=:member_id 
+            AND evaluation IS NOT NULL 
+            AND category=(SELECT category FROM tblEvents WHERE event_id=:event_id)
+            ORDER BY date 
+            LIMIT 10) att 
+            GROUP BY evaluation";
         $statement = $db_conn->prepare($query);
         $statement->bindParam(":member_id", $member_id);
+        $statement->bindParam(":event_id", $event_id);
 
         if (!$statement->execute()) {
             http_response_code(500);
@@ -394,6 +385,26 @@ function predictAttendence($event_id) {
 
         $okay = 0;
         $not_okay = 0;
+
+        if ($statement->rowCount() < 5) {
+            // no or not enough evaluated attendences in the category, use all categories
+            $query = "SELECT evaluation, COUNT(*) FROM 
+                (SELECT evaluation FROM tblAttendence 
+                LEFT JOIN tblEvents 
+                ON tblAttendence.event_id=tblEvents.event_id 
+                WHERE member_id=:member_id 
+                AND evaluation IS NOT NULL 
+                ORDER BY date 
+                LIMIT 10) att 
+                GROUP BY evaluation";
+            $statement = $db_conn->prepare($query);
+            $statement->bindParam(":member_id", $member_id);
+
+            if (!$statement->execute()) {
+                http_response_code(500);
+                return;
+            }
+        }
 
         while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
             switch ($row['evaluation']) {
