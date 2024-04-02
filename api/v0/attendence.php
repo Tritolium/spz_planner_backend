@@ -418,6 +418,12 @@ function predictAttendence($event_id) {
             }
         }
 
+        if ($okay + $not_okay == 0) {
+            // no evaluated attendences
+            $prob_missing += 1;
+            continue;
+        }
+
         if ($not_okay / ($not_okay + $okay) >= 0.1) {
             $prob_missing += 1;
         } else {
