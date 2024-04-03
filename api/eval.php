@@ -358,6 +358,19 @@ function getStatistics($api_token)
         $versions[$last_version] = $count;
     }
 
+    $query = "SELECT last_display, COUNT(*) AS count FROM (SELECT last_display FROM tblMembers LEFT JOIN tblUsergroupAssignments ON tblMembers.member_id=tblUsergroupAssignments.member_id WHERE usergroup_id IS NOT null GROUP BY tblMembers.member_id ORDER BY last_version) AS members GROUP BY last_display";
+    $statement = $db_conn->prepare($query);
+    if(!$statement->execute()){
+        http_response_code(500);
+    }
+
+    $displays = array();
+
+    while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+        extract($row);
+        $displays[$last_display] = intval($count);
+    }
+
     // today
 
     $query = "SELECT COUNT(*) AS calls FROM tblLogin WHERE DATE(timestamp) = :date";
@@ -477,6 +490,7 @@ function getStatistics($api_token)
     // TODO: remove on 1/4/2024
     $stats = array(
         "Versions" => $versions,
+        "Displays" => $displays,
         "Users" => [
             "Calls" => $today_calls,
             "Daily" => $today_daily,
