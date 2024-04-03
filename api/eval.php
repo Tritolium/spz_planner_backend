@@ -17,12 +17,6 @@ case 'OPTIONS':
     http_response_code(200);
     break;
 case 'GET':
-    /* TODO: remove on 1/4/2024 */
-    if(isset($_GET['version'])){
-        getVersionEval();
-        exit();
-    }
-
     if(isset($_GET['statistics'])){
         getStatistics($_GET['api_token']);
         exit();
@@ -473,13 +467,9 @@ function getStatistics($api_token)
         }
     }
 
-    // keep Users.Calls and Users.Daily for backwards compatibility
-    // TODO: remove on 1/4/2024
     $stats = array(
         "Versions" => $versions,
         "Users" => [
-            "Calls" => $today_calls,
-            "Daily" => $today_daily,
             "Today" => [
                 "Calls" => $today_calls,
                 "Daily" => $today_daily,
@@ -501,28 +491,6 @@ function getStatistics($api_token)
     );
 
     response_with_data(200, $stats);
-}
-
-/* TODO: remove on 1/4/2024 */
-function getVersionEval()
-{
-    $database = new Database();
-    $db_conn = $database->getConnection();
-
-    $query = "SELECT last_version, COUNT(*) AS count FROM tblMembers GROUP BY last_version";
-    $statement = $db_conn->prepare($query);
-    if(!$statement->execute()){
-        http_response_code(500);
-    }
-
-    $versions = array();
-
-    while($row = $statement->fetch(PDO::FETCH_ASSOC)){
-        extract($row);
-        $versions[$last_version] = $count;
-    }
-
-    response_with_data(200, $versions);
 }
 
 function setEventEval($event_id, $evaluation)
