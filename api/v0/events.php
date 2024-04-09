@@ -200,6 +200,7 @@ function getNextEvents() {
         AND date >= CURDATE()
         AND accepted = 1
         AND category = :category
+        AND evaluated = 0
         ORDER BY date ASC";
 
     $statement = $db_conn->prepare($query);
