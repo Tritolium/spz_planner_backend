@@ -38,6 +38,8 @@ if (isset($request_exploded[2]) && $request_exploded[2] != '') {
         case 'GET':
             if (isset($_GET['next'])) {
                 getNextEvents();
+            } else if (isset($_GET['fixed'])) {
+                getFixedEvents();
             } else {
                 getEvents();
             }
@@ -97,7 +99,8 @@ function getEvents($id = null) {
                 "PlusOne" => boolval($plusone),
                 "Clothing" => intval($clothing),
                 "Usergroup_ID" => intval($usergroup_id),
-                "Evaluated" => boolval($evaluated)
+                "Evaluated" => boolval($evaluated),
+                "Fixed" => boolval($fixed)
             );
         }
 
@@ -178,7 +181,8 @@ function getEvents($id = null) {
                 "Clothing" => intval($clothing),
                 "Usergroup_ID" => intval($usergroup_id),
                 "Association_ID" => intval($association_id),
-                "Evaluated" => boolval($evaluated)
+                "Evaluated" => boolval($evaluated),
+                "Fixed" => boolval($fixed)
             );
             array_push($events, $event);
         }
@@ -237,13 +241,52 @@ function getNextEvents() {
     response_with_data(200, $events);
 }
 
+function getFixedEvents() {
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT * FROM tblEvents
+        WHERE usergroup_id IN 
+            (SELECT usergroup_id FROM tblUsergroupAssignments 
+            WHERE member_id IN
+                (SELECT member_id FROM tblMembers 
+                WHERE api_token = :api_token))
+        AND date >= CURDATE()
+        AND accepted = 1
+        AND fixed = 1
+        AND evaluated = 0
+        ORDER BY date ASC";
+
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":api_token", $_GET['api_token']);
+    
+    if (!$statement->execute()) {
+        http_response_code(500);
+        return;
+    }
+
+    if ($statement->rowCount() < 1) {
+        http_response_code(204);
+        return;
+    }
+
+    $events = array();
+
+    while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+        extract($row);
+        array_push($events, intval($event_id));
+    }
+
+    response_with_data(200, $events);
+}
+
 function updateEvent($id) {
     $database = new Database();
     $db_conn = $database->getConnection();
 
     $data = json_decode(file_get_contents("php://input"));
 
-    $query = "UPDATE tblEvents SET type = :type, location = :location, address = :address, category = :category, date = :date, begin = :begin, departure = :departure, leave_dep = :leave_dep, accepted = :accepted, plusone = :plusone, clothing = :clothing, usergroup_id = :usergroup_id WHERE event_id = :event_id";
+    $query = "UPDATE tblEvents SET type = :type, location = :location, address = :address, category = :category, date = :date, begin = :begin, departure = :departure, leave_dep = :leave_dep, accepted = :accepted, plusone = :plusone, clothing = :clothing, usergroup_id = :usergroup_id, fixed = :fixed WHERE event_id = :event_id";
     $statement = $db_conn->prepare($query);
 
     $statement->bindParam(":type", $data->Type);
@@ -259,6 +302,7 @@ function updateEvent($id) {
     $statement->bindParam(":clothing", $data->Clothing);
     $statement->bindParam(":usergroup_id", $data->Usergroup_ID);
     $statement->bindParam(":event_id", $id);
+    $statement->bindValue(":fixed", $data->Fixed ? 1 : 0);
 
     if (!$statement->execute()) {
         http_response_code(500);
@@ -274,7 +318,7 @@ function createEvent() {
 
     $data = json_decode(file_get_contents("php://input"));
 
-    $query = "INSERT INTO tblEvents (type, location, address, category, date, begin, departure, leave_dep, accepted, plusone, clothing, usergroup_id) VALUES (:type, :location, :address, :category, :date, :begin, :departure, :leave_dep, :accepted, :plusone, :clothing, :usergroup_id); SELECT LAST_INSERT_ID()";
+    $query = "INSERT INTO tblEvents (type, location, address, category, date, begin, departure, leave_dep, accepted, plusone, clothing, usergroup_id, fixed) VALUES (:type, :location, :address, :category, :date, :begin, :departure, :leave_dep, :accepted, :plusone, :clothing, :usergroup_id, :fixed); SELECT LAST_INSERT_ID()";
     $statement = $db_conn->prepare($query);
 
     $statement->bindParam(":type", $data->Type);
@@ -289,6 +333,7 @@ function createEvent() {
     $statement->bindValue(":plusone", $data->PlusOne ? 1 : 0);
     $statement->bindParam(":clothing", $data->Clothing);
     $statement->bindParam(":usergroup_id", $data->Usergroup_ID);
+    $statement->bindValue(":fixed", $data->Fixed ? 1 : 0);
 
     if (!$statement->execute()) {
         http_response_code(500);
