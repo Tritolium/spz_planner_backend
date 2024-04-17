@@ -413,6 +413,7 @@ function readMissingAttendences($event_id)
             mail("podom@t-online.de", "Fehlende Rückmeldungen für heute", json_to_html($attendences), implode("\r\n", $headers));
         }
     } else {
+        $missing_only = false;
         $query = "SELECT category FROM tblEvents WHERE event_id=:event_id";
         $statement = $db_conn->prepare($query);
         $statement->bindParam(":event_id", $event_id);
@@ -420,6 +421,15 @@ function readMissingAttendences($event_id)
         if(!$statement->execute()){
             http_response_code(500);
             exit();
+        }
+
+        if($statement->rowCount() < 1){
+            http_response_code(204);
+            exit();
+        }
+
+        if(isset($_GET['monly'])) {
+            $missing_only = true;
         }
 
         $query = "SELECT endpoint, authToken, publicKey FROM 
@@ -433,8 +443,8 @@ function readMissingAttendences($event_id)
             AND type NOT LIKE '%Abgesagt%') AS mem LEFT JOIN tblAttendence 
             ON mem.member_id=tblAttendence.member_id 
             AND mem.event_id=tblAttendence.event_id 
-            WHERE attendence IS null 
-            OR attendence = 2) as missing 
+            WHERE attendence IS null "
+            . ($missing_only ? "" : "OR attendence = 2") . ") AS missing 
             JOIN tblSubscription 
             ON missing.member_id = tblSubscription.member_id 
             WHERE allowed=1";
