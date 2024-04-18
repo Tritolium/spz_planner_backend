@@ -432,7 +432,7 @@ function readMissingAttendences($event_id)
             $missing_only = true;
         }
 
-        $query = "SELECT endpoint, authToken, publicKey FROM 
+        $query = "SELECT subscription_id, endpoint, authToken, publicKey FROM 
             (SELECT mem.member_id, attendence FROM 
             (SELECT tblMembers.member_id, event_id 
             FROM tblMembers JOIN tblUsergroupAssignments 
@@ -482,6 +482,7 @@ function readMissingAttendences($event_id)
         while($row = $statement->fetch(PDO::FETCH_ASSOC)){
             extract($row);
             $sub = array(
+                "subscription_id" => $subscription_id,
                 "endpoint"  => $endpoint,
                 "authToken" => $authToken,
                 "publicKey" => $publicKey
