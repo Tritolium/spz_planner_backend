@@ -414,7 +414,7 @@ function readMissingAttendences($event_id)
         }
     } else {
         $missing_only = false;
-        $query = "SELECT category FROM tblEvents WHERE event_id=:event_id";
+        $query = "SELECT push, category FROM tblEvents WHERE event_id=:event_id";
         $statement = $db_conn->prepare($query);
         $statement->bindParam(":event_id", $event_id);
 
@@ -450,6 +450,12 @@ function readMissingAttendences($event_id)
             WHERE allowed=1";
 
         $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+        if($row['push'] == 0){
+            http_response_code(204);
+            exit();
+        }
+
         switch($row['category']){
         case 'practice':
             $query = $query . " AND practice=1";

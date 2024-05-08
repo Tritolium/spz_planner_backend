@@ -100,7 +100,8 @@ function getEvents($id = null) {
                 "Clothing" => intval($clothing),
                 "Usergroup_ID" => intval($usergroup_id),
                 "Evaluated" => boolval($evaluated),
-                "Fixed" => boolval($fixed)
+                "Fixed" => boolval($fixed),
+                "Push" => boolval($push)
             );
         }
 
@@ -182,7 +183,8 @@ function getEvents($id = null) {
                 "Usergroup_ID" => intval($usergroup_id),
                 "Association_ID" => intval($association_id),
                 "Evaluated" => boolval($evaluated),
-                "Fixed" => boolval($fixed)
+                "Fixed" => boolval($fixed),
+                "Push" => boolval($push)
             );
             array_push($events, $event);
         }
@@ -286,7 +288,7 @@ function updateEvent($id) {
 
     $data = json_decode(file_get_contents("php://input"));
 
-    $query = "UPDATE tblEvents SET type = :type, location = :location, address = :address, category = :category, date = :date, begin = :begin, departure = :departure, leave_dep = :leave_dep, accepted = :accepted, plusone = :plusone, clothing = :clothing, usergroup_id = :usergroup_id, fixed = :fixed WHERE event_id = :event_id";
+    $query = "UPDATE tblEvents SET type = :type, location = :location, address = :address, category = :category, date = :date, begin = :begin, departure = :departure, leave_dep = :leave_dep, accepted = :accepted, plusone = :plusone, clothing = :clothing, usergroup_id = :usergroup_id, fixed = :fixed, push = :push WHERE event_id = :event_id";
     $statement = $db_conn->prepare($query);
 
     $statement->bindParam(":type", $data->Type);
@@ -303,6 +305,7 @@ function updateEvent($id) {
     $statement->bindParam(":usergroup_id", $data->Usergroup_ID);
     $statement->bindParam(":event_id", $id);
     $statement->bindValue(":fixed", $data->Fixed ? 1 : 0);
+    $statement->bindValue(":push", $data->Push ? 1 : 0);
 
     if (!$statement->execute()) {
         http_response_code(500);
@@ -318,7 +321,7 @@ function createEvent() {
 
     $data = json_decode(file_get_contents("php://input"));
 
-    $query = "INSERT INTO tblEvents (type, location, address, category, date, begin, departure, leave_dep, accepted, plusone, clothing, usergroup_id, fixed) VALUES (:type, :location, :address, :category, :date, :begin, :departure, :leave_dep, :accepted, :plusone, :clothing, :usergroup_id, :fixed); SELECT LAST_INSERT_ID()";
+    $query = "INSERT INTO tblEvents (type, location, address, category, date, begin, departure, leave_dep, accepted, plusone, clothing, usergroup_id, fixed, push) VALUES (:type, :location, :address, :category, :date, :begin, :departure, :leave_dep, :accepted, :plusone, :clothing, :usergroup_id, :fixed, :push); SELECT LAST_INSERT_ID()";
     $statement = $db_conn->prepare($query);
 
     $statement->bindParam(":type", $data->Type);
@@ -334,6 +337,7 @@ function createEvent() {
     $statement->bindParam(":clothing", $data->Clothing);
     $statement->bindParam(":usergroup_id", $data->Usergroup_ID);
     $statement->bindValue(":fixed", $data->Fixed ? 1 : 0);
+    $statement->bindValue(":push", $data->Push ? 1 : 0);
 
     if (!$statement->execute()) {
         http_response_code(500);
