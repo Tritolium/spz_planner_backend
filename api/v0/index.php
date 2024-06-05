@@ -35,6 +35,9 @@ switch ($request) {
     case 'member':
         require __DIR__ . '/member.php';
         break;
+    case 'permissions':
+        require __DIR__ . '/permissions.php';
+        break;
     case 'pushsubscription':
         require __DIR__ . '/pushsubscription.php';
         break;
