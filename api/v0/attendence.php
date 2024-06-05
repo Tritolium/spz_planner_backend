@@ -335,7 +335,8 @@ function predictAttendence($event_id) {
         ON tblEvents.event_id=tblAttendence.event_id 
         AND tblUsergroupAssignments.member_id=tblAttendence.member_id 
         WHERE tblEvents.event_id=:event_id 
-        AND attendence IS NULL";
+        AND (attendence IS NULL 
+        OR attendence=-1)";
 
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":event_id", $event_id);
