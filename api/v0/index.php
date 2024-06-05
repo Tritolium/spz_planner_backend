@@ -38,6 +38,9 @@ switch ($request) {
     case 'pushsubscription':
         require __DIR__ . '/pushsubscription.php';
         break;
+    case 'roles':
+        require __DIR__ . '/roles.php';
+        break;
     default:
         http_response_code(404);
         require __DIR__ . '/404.php';
