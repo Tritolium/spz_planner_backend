@@ -1,5 +1,6 @@
 <?php
 include_once './config/database.php';
+include_once './v0/predictionlog.php';
 
 if(!isset($_GET['api_token'])){
     http_response_code(401);
@@ -512,6 +513,23 @@ function setEventEval($event_id, $evaluation)
     $database = new Database();
     $db_conn = $database->getConnection();
 
+    //get the predicted number of attendences
+    $query = "SELECT COUNT(*) AS consent FROM tblAttendence WHERE event_id=:event_id AND attendence=1";
+
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
+    if(!$statement->execute()){
+        http_response_code(500);
+        exit();
+    }
+
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    $consent = intval($row['consent']);
+
+    [$prob_attending, $prob_missing] = predictAttendence($event_id);
+
+    $prediction = $consent + $prob_attending;
+
     $query = "INSERT INTO tblAttendence (member_id, event_id, evaluation) VALUES (:member_id, :event_id, :evaluation) ON DUPLICATE KEY UPDATE evaluation=:evaluation";
     
     foreach($evaluation as $member_id => $eval){
@@ -526,9 +544,10 @@ function setEventEval($event_id, $evaluation)
         }
     }
 
-    $query = "UPDATE tblEvents SET evaluated=1 WHERE event_id=:event_id";
+    $query = "UPDATE tblEvents SET evaluated=1, prediction=:prediction WHERE event_id=:event_id";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":event_id", $event_id);
+    $statement->bindParam(":prediction", $prediction);
     if(!$statement->execute()){
         http_response_code(500);
         exit();
