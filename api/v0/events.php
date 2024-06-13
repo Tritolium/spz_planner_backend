@@ -230,6 +230,14 @@ function getNextEvents() {
     array_push($events, intval($event_id));
     $head_date = new DateTime($date);
 
+    // if the type contains "Abgesagt", get the next event
+    while (strpos($type, 'Abgesagt') !== false) {
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        extract($row);
+        array_push($events, intval($event_id));
+        $head_date = new DateTime($date);
+    }
+
     while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
         extract($row);
         $cur_date = new DateTime($date);
