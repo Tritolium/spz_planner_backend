@@ -68,5 +68,25 @@ function getRoles($role_id = null) {
     }
 
     $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($roles as $index => $role) {
+        $query = "SELECT permission_id FROM tblRolePermissions WHERE role_id = :role_id";
+        $stmt = $db_conn->prepare($query);
+        $stmt->bindParam(':role_id', $role['role_id']);
+
+        if (!$stmt->execute()) {
+            http_response_code(500);
+            exit();
+        }
+
+        $roles[$index]['permissions'] = [];
+
+        $role_permissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($role_permissions as $permission) {
+            $roles[$index]['permissions'][] = $permission['permission_id'];
+        }
+    }
+
     echo json_encode($roles);
 }
