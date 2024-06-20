@@ -42,20 +42,55 @@ function getMember($member_id) {
     $conn = $database->getConnection();
 
     if ($member_id == null) {
-        // get all members that are assigned to the same associations as the user
-        $query = "SELECT tm.member_id, forename, surname, birthdate FROM tblMembers tm 
-            LEFT JOIN tblAssociationAssignments taa 
-            ON tm.member_id = taa.member_id 
-            WHERE taa.association_id IN 
-                (SELECT association_id FROM tblAssociationAssignments taa 
+        
+        if(isset($_GET['association_id'])) {
+            // check if the user is assigned to the association
+            $query = "SELECT * FROM tblAssociationAssignments taa 
                 LEFT JOIN tblMembers tm 
                 ON taa.member_id = tm.member_id 
-                WHERE api_token = :api_token) 
-            GROUP BY tm.member_id 
-            ORDER BY surname, forename";
-        
-        $stmt = $conn->prepare($query);
-        $stmt->bindParam(':api_token', $_GET['api_token']);
+                WHERE api_token = :api_token 
+                AND association_id = :association_id";
+
+            $stmt = $conn->prepare($query);
+            $stmt->bindParam(':api_token', $_GET['api_token']);
+            $stmt->bindParam(':association_id', $_GET['association_id']);
+
+            if (!$stmt->execute()) {
+                http_response_code(500);
+                exit();
+            }
+
+            if ($stmt->rowCount() < 1) {
+                http_response_code(403);
+                exit();
+            }
+
+            // get all members that are assigned to the association
+            $query = "SELECT tm.member_id, forename, surname, birthdate FROM tblMembers tm 
+                LEFT JOIN tblAssociationAssignments taa 
+                ON tm.member_id = taa.member_id 
+                WHERE taa.association_id = :association_id 
+                GROUP BY tm.member_id 
+                ORDER BY surname, forename";
+
+            $stmt = $conn->prepare($query);
+            $stmt->bindParam(':association_id', $_GET['association_id']);
+        } else {
+            // get all members that are assigned to the same associations as the user
+            $query = "SELECT tm.member_id, forename, surname, birthdate FROM tblMembers tm 
+                LEFT JOIN tblAssociationAssignments taa 
+                ON tm.member_id = taa.member_id 
+                WHERE taa.association_id IN 
+                    (SELECT association_id FROM tblAssociationAssignments taa 
+                    LEFT JOIN tblMembers tm 
+                    ON taa.member_id = tm.member_id 
+                    WHERE api_token = :api_token) 
+                GROUP BY tm.member_id 
+                ORDER BY surname, forename";
+            
+            $stmt = $conn->prepare($query);
+            $stmt->bindParam(':api_token', $_GET['api_token']);
+        }
 
         if (!$stmt->execute()) {
             http_response_code(500);
