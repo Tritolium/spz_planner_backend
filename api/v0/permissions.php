@@ -6,6 +6,49 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
 header("Content-Type: application/json; charset=UTF-8");
 
+$permissions = [
+    [
+        "permission_id" => 1,
+        "permission_name" => "member_create",
+        "description" => "Nutzer erstellen"
+    ],
+    [
+        "permission_id" => 2,
+        "permission_name" => "member_delete",
+        "description" => "Nutzer löschen"
+    ],
+    [
+        "permission_id" => 3,
+        "permission_name" => "member_read",
+        "description" => "Nutzer lesen"
+    ],
+    [
+        "permission_id" => 4,
+        "permission_name" => "member_edit",
+        "description" => "Nutzer bearbeiten"
+    ],
+    [
+        "permission_id" => 5,
+        "permission_name" => "role_create",
+        "description" => "Rolle erstellen"
+    ],
+    [
+        "permission_id" => 6,
+        "permission_name" => "role_delete",
+        "description" => "Rolle löschen"
+    ],
+    [
+        "permission_id" => 7,
+        "permission_name" => "role_read",
+        "description" => "Rolle lesen"
+    ],
+    [
+        "permission_id" => 8,
+        "permission_name" => "role_edit",
+        "description" => "Rolle bearbeiten"
+    ]
+];
+
 $request = $_SERVER['REQUEST_URI'];
 // remove the /api/v0 part of the request
 $request = str_replace('/api/v0', '', $request);
@@ -44,24 +87,18 @@ if (isset($request_exploded[2]) && $request_exploded[2] != '') {
 }
 
 function getPermissions($permission_id = null) {
-    $database = new Database();
-    $db_conn = $database->getConnection();
+
+    global $permissions;
 
     if ($permission_id != null) {
-        $query = "SELECT * FROM tblPermissions WHERE permission_id = :permission_id";
-        $stmt = $db_conn->prepare($query);
-        $stmt->bindParam(':permission_id', $permission_id);
+        foreach ($permissions as $permission) {
+            if ($permission['permission_id'] == $permission_id) {
+                $result = $permission;
+            }
+        }
     } else {
-        $query = "SELECT * FROM tblPermissions";
-        $stmt = $db_conn->prepare($query);
+        $result = $permissions;
     }
-
-    if (!$stmt->execute()) {
-        http_response_code(500);
-        exit();
-    }
-
-    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode($result);
 }
