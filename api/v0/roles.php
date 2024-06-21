@@ -3,7 +3,7 @@
 require __DIR__ . '/config/database.php';
 
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header("Content-Type: application/json; charset=UTF-8");
 
 $request = $_SERVER['REQUEST_URI'];
@@ -26,6 +26,9 @@ if (isset($request_exploded[2]) && $request_exploded[2] != '') {
             break;
         case 'PUT':
             updateRole($id);
+            break;
+        case 'DELETE':
+            deleteRole($id);
             break;
         default:
             http_response_code(405);
@@ -160,6 +163,38 @@ function createRole() {
             http_response_code(500);
             exit();
         }
+    }
+}
+
+function deleteRole($role_id) {
+    // TODO check if the user is authorized to delete a role
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    // check if any user has this role
+    $query = "SELECT COUNT(*) as count FROM tblUserRoles WHERE role_id = :role_id";
+    $stmt = $db_conn->prepare($query);
+    $stmt->bindParam(':role_id', $role_id);
+
+    if (!$stmt->execute()) {
+        http_response_code(500);
+        exit();
+    }
+
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($result['count'] > 0) {
+        http_response_code(400);
+        exit();
+    }
+
+    $query = "DELETE FROM tblRoles WHERE role_id = :role_id";
+    $stmt = $db_conn->prepare($query);
+    $stmt->bindParam(':role_id', $role_id);
+
+    if (!$stmt->execute()) {
+        http_response_code(500);
+        exit();
     }
 }
 
