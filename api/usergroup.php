@@ -106,8 +106,8 @@ function newUsergroup($api_token, $data){
     $query = "INSERT INTO tblUsergroups (title, is_admin, is_moderator, info, association_id) VALUES (:title, :is_admin, :is_moderator, :info, :association_id)";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":title", $data->Title);
-    $statement->bindParam(":is_admin", $data->Admin === true ? 1 : 0);
-    $statement->bindParam(":is_moderator", $data->Moderator === true ? 1 : 0);
+    $statement->bindValue(":is_admin", $data->Admin === true ? 1 : 0);
+    $statement->bindValue(":is_moderator", $data->Moderator === true ? 1 : 0);
     $statement->bindParam(":info", $data->Info);
     $statement->bindParam(":association_id", $data->Association_ID);
     if($statement->execute()){
