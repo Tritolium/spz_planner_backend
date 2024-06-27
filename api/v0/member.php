@@ -116,6 +116,35 @@ function getMember($member_id) {
             exit();
         }
 
+        // for each member get the roles
+        foreach ($members as $index => $member) {
+            $query = "SELECT role_id, association_id FROM tblUserRoles WHERE member_id = :member_id 
+                AND association_id IN 
+                    (SELECT association_id FROM tblAssociationAssignments taa 
+                    LEFT JOIN tblMembers tm 
+                    ON taa.member_id = tm.member_id 
+                    WHERE api_token = :api_token)
+                ORDER BY association_id";
+            $stmt = $conn->prepare($query);
+            $stmt->bindParam(':member_id', $member['Member_ID']);
+            $stmt->bindParam(':api_token', $_GET['api_token']);
+
+            if (!$stmt->execute()) {
+                http_response_code(500);
+                exit();
+            }
+            
+            $members[$index]['Roles'] = array();
+
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                extract($row);
+                if (!isset($members[$index]['Roles'][$association_id])) {
+                    $members[$index]['Roles'][$association_id] = [];
+                }
+                array_push($members[$index]['Roles'][$association_id], $role_id);
+            }
+        }
+
         http_response_code(200);
         echo json_encode($members);
     } else {
