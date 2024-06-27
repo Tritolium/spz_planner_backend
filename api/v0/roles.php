@@ -144,7 +144,7 @@ function createRole() {
     $query = "INSERT INTO tblRoles (role_name, description) VALUES (:role_name, :description)";
     $stmt = $db_conn->prepare($query);
     $stmt->bindParam(':role_name', $data['role_name']);
-    $stmt->bindParam(':description', $data['role_description']);
+    $stmt->bindParam(':description', $data['description']);
 
     if (!$stmt->execute()) {
         http_response_code(500);
