@@ -6,6 +6,8 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header("Content-Type: application/json; charset=UTF-8");
 
+require_once __DIR__ . '/config/permission-helper.php';
+
 $request = $_SERVER['REQUEST_URI'];
 // remove the /api/v0 part of the request
 $request = str_replace('/api/v0', '', $request);
@@ -95,7 +97,13 @@ function getRoles($role_id = null) {
 }
 
 function updateRole($role_id) {
-    // TODO check if the user is authorized to update a role
+    
+    // check if the user is authorized to update a role
+    if (!hasPermission($_GET['api_token'], 4)) {
+        http_response_code(403);
+        exit();
+    }
+
     $database = new Database();
     $db_conn = $database->getConnection();
 
@@ -135,7 +143,7 @@ function updateRole($role_id) {
 }
 
 function createRole() {
-    // TODO check if the user is authorized to create a role
+    hasPermission($_GET['api_token'], 4);
     $database = new Database();
     $db_conn = $database->getConnection();
 
@@ -167,7 +175,7 @@ function createRole() {
 }
 
 function deleteRole($role_id) {
-    // TODO check if the user is authorized to delete a role
+    hasPermission($_GET['api_token'], 4);
     $database = new Database();
     $db_conn = $database->getConnection();
 
