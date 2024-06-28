@@ -9,43 +9,28 @@ header("Content-Type: application/json; charset=UTF-8");
 $permissions = [
     [
         "permission_id" => 1,
-        "permission_name" => "member_create",
-        "description" => "Nutzer erstellen"
-    ],
-    [
-        "permission_id" => 2,
-        "permission_name" => "member_delete",
-        "description" => "Nutzer löschen"
-    ],
-    [
-        "permission_id" => 3,
         "permission_name" => "member_read",
         "description" => "Nutzer lesen"
     ],
     [
-        "permission_id" => 4,
-        "permission_name" => "member_edit",
-        "description" => "Nutzer bearbeiten"
+        "permission_id" => 2,
+        "permission_name" => "member_write",
+        "description" => "Nutzer erstellen, bearbeiten und löschen"
     ],
     [
-        "permission_id" => 5,
-        "permission_name" => "role_create",
-        "description" => "Rolle erstellen"
-    ],
-    [
-        "permission_id" => 6,
-        "permission_name" => "role_delete",
-        "description" => "Rolle löschen"
-    ],
-    [
-        "permission_id" => 7,
+        "permission_id" => 3,
         "permission_name" => "role_read",
         "description" => "Rolle lesen"
     ],
     [
-        "permission_id" => 8,
-        "permission_name" => "role_edit",
-        "description" => "Rolle bearbeiten"
+        "permission_id" => 4,
+        "permission_name" => "role_write",
+        "description" => "Rolle erstellen, bearbeiten und löschen"
+    ],
+    [
+        "permission_id" => 5,
+        "permission_name" => "role_assign",
+        "description" => "Rolle zuweisen"
     ]
 ];
 
