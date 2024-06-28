@@ -29,14 +29,14 @@ case 'login':
 
     $name = '%' . $data->Name . '%';
 
-    $statement = $db_conn->prepare('SELECT forename, surname, auth_level, api_token, theme FROM tblMembers WHERE Nicknames LIKE :name');
+    $statement = $db_conn->prepare('SELECT member_id, forename, surname, auth_level, api_token, theme FROM tblMembers WHERE Nicknames LIKE :name');
     $statement->bindParam(":name", $name);
 
     if($statement->execute()){
         if($statement->rowCount() == 1){
             $row = $statement->fetch(PDO::FETCH_ASSOC);
         } else {
-            $statement = $db_conn->prepare('SELECT forename, surname, auth_level, api_token, pwhash, theme FROM tblMembers WHERE CONCAT(forename, \' \', surname, \' \', nicknames) LIKE :full_name');
+            $statement = $db_conn->prepare('SELECT member_id, forename, surname, auth_level, api_token, pwhash, theme FROM tblMembers WHERE CONCAT(forename, \' \', surname, \' \', nicknames) LIKE :full_name');
             $statement->bindParam(":full_name", $name);
             
             if($statement->execute()){
@@ -65,6 +65,31 @@ case 'login':
             $err_code = 4;
         }
 
+        $permissions = array();
+
+        $query = "SELECT association_id, permission_id 
+            FROM `tblUserRoles` 
+            LEFT JOIN tblRolePermissions 
+            ON tblUserRoles.role_id=tblRolePermissions.role_id 
+            WHERE member_id=:member_id 
+            ORDER BY association_id";
+
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(":member_id", $member_id);
+
+        if(!$statement->execute()){
+            http_response_code(500);
+            exit();
+        }
+
+        while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+            extract($row);
+
+            if($permission_id !== NULL)
+                $permissions[$association_id][] = $permission_id;
+
+        }
+
         // check the password
         if($data->PWHash == $pwhash){
             $response_body = array(
@@ -73,7 +98,8 @@ case 'login':
                 "API_token" => $api_token,
                 "Auth_level" => $auth_level,
                 "Theme" => intval($theme),
-                "Err" => $err_code
+                "Err" => $err_code,
+                "Permissions" => $permissions
             );
 
             response_with_data(200, $response_body);
@@ -103,7 +129,7 @@ case 'update':
 
     lastLogin($api_token, $data, 1);
 
-    $statement = $db_conn->prepare('SELECT forename, surname, auth_level, theme, pwhash FROM tblMembers WHERE api_token = :token');
+    $statement = $db_conn->prepare('SELECT member_id, forename, surname, auth_level, theme, pwhash FROM tblMembers WHERE api_token = :token');
     $statement->bindParam(":token", $api_token);
 
     $err_code = 0;
@@ -117,12 +143,38 @@ case 'update':
                 $err_code = 4;
             }
 
+            $permissions = array();
+
+            $query = "SELECT association_id, permission_id 
+                FROM `tblUserRoles` 
+                LEFT JOIN tblRolePermissions 
+                ON tblUserRoles.role_id=tblRolePermissions.role_id 
+                WHERE member_id=:member_id 
+                ORDER BY association_id";
+
+            $statement = $db_conn->prepare($query);
+            $statement->bindParam(":member_id", $member_id);
+
+            if(!$statement->execute()){
+                http_response_code(500);
+                exit();
+            }
+
+            while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+                extract($row);
+
+                if($permission_id !== NULL)
+                    $permissions[$association_id][] = $permission_id;
+
+            }
+
             $response_body = array(
                 "Forename" => $forename,
                 "Surname" => $surname,
                 "Auth_level" => $auth_level,
                 "Theme" => intval($theme),
-                "Err" => $err_code
+                "Err" => $err_code,
+                "Permissions" => $permissions
             );
             response_with_data(200, $response_body);
         } else {

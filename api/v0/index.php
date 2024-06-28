@@ -35,8 +35,17 @@ switch ($request) {
     case 'member':
         require __DIR__ . '/member.php';
         break;
+    case 'permissions':
+        require __DIR__ . '/permissions.php';
+        break;
     case 'pushsubscription':
         require __DIR__ . '/pushsubscription.php';
+        break;
+    case 'roleassign':
+        require __DIR__ . '/roleassign.php';
+        break;
+    case 'roles':
+        require __DIR__ . '/roles.php';
         break;
     default:
         http_response_code(404);
