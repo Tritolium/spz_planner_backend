@@ -41,6 +41,9 @@ switch ($request) {
     case 'pushsubscription':
         require __DIR__ . '/pushsubscription.php';
         break;
+    case 'roleassign':
+        require __DIR__ . '/roleassign.php';
+        break;
     case 'roles':
         require __DIR__ . '/roles.php';
         break;
