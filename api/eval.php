@@ -340,17 +340,43 @@ function getStatistics($api_token)
         $date = $_GET['date'];        
     }
 
-    $query = "SELECT last_version, COUNT(*) AS count FROM (SELECT tblMembers.member_id, last_version FROM tblMembers LEFT JOIN tblUsergroupAssignments ON tblMembers.member_id=tblUsergroupAssignments.member_id WHERE usergroup_id IS NOT null GROUP BY tblMembers.member_id ORDER BY last_version) AS members GROUP BY last_version";
-    $statement = $db_conn->prepare($query);
-    if(!$statement->execute()){
-        http_response_code(500);
-    }
+    if(isset($_GET['date'])){
+        $query = "SELECT COUNT(*) as count, version 
+            FROM (SELECT t1.* FROM tblLogin t1
+            JOIN (SELECT member_id, max(timestamp)
+                AS max_timestamp FROM tblLogin 
+                WHERE timestamp < :date 
+                GROUP BY member_id) t2
+            ON t1.member_id=t2.member_id 
+            AND t1.timestamp = t2.max_timestamp
+        ORDER by member_id) t3 GROUP BY version";
 
-    $versions = array();
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(":date", $date);
 
-    while($row = $statement->fetch(PDO::FETCH_ASSOC)){
-        extract($row);
-        $versions[$last_version] = $count;
+        if(!$statement->execute()){
+            http_response_code(500);
+        }
+
+        $versions = array();
+
+        while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+            extract($row);
+            $versions[$version] = $count;
+        }
+    } else {
+        $query = "SELECT last_version, COUNT(*) AS count FROM (SELECT tblMembers.member_id, last_version FROM tblMembers LEFT JOIN tblUsergroupAssignments ON tblMembers.member_id=tblUsergroupAssignments.member_id WHERE usergroup_id IS NOT null GROUP BY tblMembers.member_id ORDER BY last_version) AS members GROUP BY last_version";
+        $statement = $db_conn->prepare($query);
+        if(!$statement->execute()){
+            http_response_code(500);
+        }
+
+        $versions = array();
+
+        while($row = $statement->fetch(PDO::FETCH_ASSOC)){
+            extract($row);
+            $versions[$last_version] = $count;
+        }
     }
 
     $query = "SELECT last_display, COUNT(*) AS count FROM (SELECT last_display FROM tblMembers LEFT JOIN tblUsergroupAssignments ON tblMembers.member_id=tblUsergroupAssignments.member_id WHERE usergroup_id IS NOT null GROUP BY tblMembers.member_id ORDER BY last_version) AS members GROUP BY last_display";
