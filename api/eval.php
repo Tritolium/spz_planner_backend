@@ -65,6 +65,7 @@ function getEventEvalByUsergroup($usergroup_id)
         $maybe = getEventMaybeCount($event_item[0], $usergroup_id);
         $missing = getEventMissingCount($event_item[0], $usergroup_id);
         $plusone = getEventPlusOneCount($event_item[0], $usergroup_id);
+        [$prob_attending, $prob_missing] = predictAttendence($event_item[0]);
 
         $instruments = getEventInstruments($event_item[0]);
 
@@ -77,6 +78,8 @@ function getEventEvalByUsergroup($usergroup_id)
             "Refusal"  => $refusal,
             "Maybe"    => $maybe,
             "Missing"  => $missing,
+            "ProbAttending" => $prob_attending,
+            "ProbMissing" => $prob_missing,
             "PlusOne"  => boolval($event_item[4]) ? intval($plusone) : null,
             "Instruments" => $instruments
         );
