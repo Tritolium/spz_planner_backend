@@ -94,7 +94,7 @@ function getEvents($id = null) {
                 "Date" => $date,
                 "Begin" => ($begin == "12:34:56") ? null : $begin,
                 "Departure" => ($departure == "12:34:56") ? null : $departure,
-                "Leave_Dep" => ($leave_dep == "12:34:56") ? null : $leave_dep,
+                "Leave_dep" => ($leave_dep == "12:34:56") ? null : $leave_dep,
                 "Accepted" => boolval($accepted),
                 "PlusOne" => boolval($plusone),
                 "Clothing" => intval($clothing),
@@ -176,7 +176,7 @@ function getEvents($id = null) {
                 "Date" => $date,
                 "Begin" => ($begin == "12:34:56") ? null : $begin,
                 "Departure" => ($departure == "12:34:56") ? null : $departure,
-                "Leave_Dep" => ($leave_dep == "12:34:56") ? null : $leave_dep,
+                "Leave_dep" => ($leave_dep == "12:34:56") ? null : $leave_dep,
                 "Accepted" => boolval($accepted),
                 "PlusOne" => boolval($plusone),
                 "Clothing" => intval($clothing),
@@ -306,7 +306,7 @@ function updateEvent($id) {
     $statement->bindParam(":date", $data->Date);
     $statement->bindParam(":begin", $data->Begin);
     $statement->bindParam(":departure", $data->Departure);
-    $statement->bindParam(":leave_dep", $data->Leave_Dep);
+    $statement->bindParam(":leave_dep", $data->Leave_dep);
     $statement->bindValue(":accepted", $data->Accepted ? 1 : 0);
     $statement->bindValue(":plusone", $data->PlusOne ? 1 : 0);
     $statement->bindParam(":clothing", $data->Clothing);
@@ -339,7 +339,7 @@ function createEvent() {
     $statement->bindParam(":date", $data->Date);
     $statement->bindParam(":begin", $data->Begin);
     $statement->bindParam(":departure", $data->Departure);
-    $statement->bindParam(":leave_dep", $data->Leave_Dep);
+    $statement->bindParam(":leave_dep", $data->Leave_dep);
     $statement->bindParam(":accepted", $data->Accepted);
     $statement->bindValue(":plusone", $data->PlusOne ? 1 : 0);
     $statement->bindParam(":clothing", $data->Clothing);
