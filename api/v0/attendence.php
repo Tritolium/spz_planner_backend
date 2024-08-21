@@ -112,7 +112,7 @@ function getAttendence($event_id = null) {
             }
             switch ($row['attendence']) {
                 case 0:
-                    $refusal = intval($row['COUNT(*)']);
+                    $refusal += intval($row['COUNT(*)']); //count refusal/plusone with 0/0 and 0/1
                     break;
                 case 1:
                     if($row['plusone'] == 1)
