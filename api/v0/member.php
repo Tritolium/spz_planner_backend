@@ -149,7 +149,7 @@ function getMember($member_id) {
         echo json_encode($members);
     } else {
         // get a specific member
-        $query = "SELECT member_id, forename, surname, auth_level, nicknames, birthdate, theme
+        $query = "SELECT member_id, forename, surname, auth_level, nicknames, birthdate, instrument, theme
             FROM tblMembers WHERE member_id = :member_id";
         $stmt = $conn->prepare($query);
         $stmt->bindParam(':member_id', $member_id);
@@ -175,6 +175,7 @@ function getMember($member_id) {
             'Auth_level' => $auth_level,
             'Nicknames' => $nicknames,
             'Birthdate' => $birthdate,
+            'Instrument' => $instrument,
             'Theme' => $theme
         );
 
