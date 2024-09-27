@@ -31,6 +31,16 @@ $permissions = [
         "permission_id" => 5,
         "permission_name" => "role_assign",
         "description" => "Rolle zuweisen"
+    ],
+    [
+        "permission_id" => 6,
+        "permission_name" => "attendence_write",
+        "description" => "Anwesenheiten erfassen"
+    ],
+    [
+        "permission_id" => 7,
+        "permission_name" => "attendence_read",
+        "description" => "Anwesenheiten lesen"
     ]
 ];
 

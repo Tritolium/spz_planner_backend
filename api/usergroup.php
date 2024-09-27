@@ -247,7 +247,7 @@ function getOwnUsergroups($api_token)
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT t.usergroup_id, title from tblUsergroupAssignments t 
+    $query = "SELECT t.usergroup_id, title, association_id from tblUsergroupAssignments t 
     left join tblUsergroups t3 
     on t.usergroup_id = t3.usergroup_id 
     left join tblMembers t2 
@@ -265,7 +265,8 @@ function getOwnUsergroups($api_token)
         extract($row);
         $usergroup = array(
             "Usergroup_ID"  => $usergroup_id,
-            "Title"         => $title
+            "Title"         => $title,
+            "Association_ID"=> intval($association_id)
         );
 
         array_push($usergroups, $usergroup);

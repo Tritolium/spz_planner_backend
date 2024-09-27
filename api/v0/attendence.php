@@ -2,6 +2,7 @@
 
 require_once './config/database.php';
 require_once './predictionlog.php';
+require_once './config/permission-helper.php';
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, PATCH, PUT, POST, OPTIONS');
@@ -53,7 +54,10 @@ function getAttendence($event_id = null) {
     $db_conn = $database->getConnection();
 
     if ($event_id != null) {
-        $query = "SELECT * FROM tblEvents WHERE event_id=:event_id";
+        $query = "SELECT * FROM tblEvents 
+            LEFT JOIN tblUsergroups 
+            ON tblEvents.usergroup_id=tblUsergroups.usergroup_id 
+            WHERE event_id=:event_id";
 
         $statement = $db_conn->prepare($query);
         $statement->bindParam(":event_id", $event_id);
@@ -74,6 +78,7 @@ function getAttendence($event_id = null) {
                 "Ev_PlusOne" => boolval($plusone),
                 "Clothing" => $clothing,
                 "Usergroup_ID" => $usergroup_id,
+                "Association_ID" => $association_id
             );
         } else {
             http_response_code(500);
@@ -308,7 +313,21 @@ function updateAttendence($event_id) {
         $statement->execute();
         $data->Member_ID = $statement->fetch(PDO::FETCH_ASSOC)['member_id'];
     } else {
-        // TODO check if the requesting user is allowed to update the attendence of the member
+        // check if the requesting user is allowed to update the attendence of the member
+        $query = "SELECT association_id 
+            FROM tblEvents 
+            LEFT JOIN tblUsergroups 
+            ON tblEvents.usergroup_id = tblUsergroups.usergroup_id 
+            WHERE event_id=:event_id;";
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(":event_id", $event_id);
+        $statement->execute();
+        $association_id = $statement->fetch(PDO::FETCH_ASSOC)['association_id'];
+
+        if (!hasPermission($_GET['api_token'], 6, $association_id)) {
+            http_response_code(403);
+            return;
+        }
     }
 
     $query = "INSERT INTO tblAttendence (event_id, member_id, attendence, plusone) VALUES (:event_id, :member_id, :attendence, :plusone) ON DUPLICATE KEY UPDATE attendence=:attendence, plusone=:plusone";
