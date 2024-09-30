@@ -41,6 +41,16 @@ $permissions = [
         "permission_id" => 7,
         "permission_name" => "attendence_read",
         "description" => "Anwesenheiten lesen"
+    ],
+    [
+        "permission_id" => 8,
+        "permission_name" => "evaluation_read",
+        "description" => "Auswertungen lesen"
+    ],
+    [
+        "permission_id" => 9,
+        "permission_name" => "evaluation_write",
+        "description" => "Auswertungen erfassen"
     ]
 ];
 

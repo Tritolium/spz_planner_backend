@@ -1,6 +1,7 @@
 <?php
 
 require_once './config/database.php';
+require_once './config/permission-helper.php';
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, PUT, OPTIONS');
@@ -90,6 +91,21 @@ function getAttendenceEval($event_id = null) {
         }
 
         $usergroup_id = $_GET['usergroup_id'];
+
+        // check if the user has the permission to read attendenceeval
+        $query = "SELECT association_id FROM tblUsergroups WHERE usergroup_id=:usergroup_id";
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(':usergroup_id', $usergroup_id);
+        if(!$statement->execute()){
+            http_response_code(500);
+            return;
+        }
+
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if(!hasPermission($_GET['api_token'], 8, $row['association_id'])){
+            http_response_code(403);
+            return;
+        }
 
         $query = "SELECT users.usergroup_id, users.member_id, forename, surname, 
             t3.event_id, type, location, date, attendence, evaluation, category, prediction
