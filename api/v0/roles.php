@@ -58,6 +58,13 @@ function getRoles($role_id = null) {
     $database = new Database();
     $db_conn = $database->getConnection();
 
+    // check if the user is authorized to read roles
+    if (!hasPermission($_GET['api_token'], 3)) {
+        http_response_code(403);
+        json_encode("");
+        exit();
+    }
+
     if ($role_id != null) {
         $query = "SELECT * FROM tblRoles WHERE role_id = :role_id";
         $stmt = $db_conn->prepare($query);

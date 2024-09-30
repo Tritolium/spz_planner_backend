@@ -542,6 +542,22 @@ function setEventEval($event_id, $evaluation)
     $database = new Database();
     $db_conn = $database->getConnection();
 
+    // check if the user has permission to evaluate the event
+    $query = "SELECT association_id FROM tblEvents LEFT JOIN tblUsergroups ON tblEvents.usergroup_id=tblUsergroups.usergroup_id WHERE event_id=:event_id";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
+    if(!$statement->execute()){
+        http_response_code(500);
+        exit();
+    }
+
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+    if(!hasPermission($_GET['api_token'], 9, $row['association_id'])){
+        http_response_code(403);
+        exit();
+    }
+
     //get the predicted number of attendences
     $query = "SELECT COUNT(*) AS consent FROM tblAttendence WHERE event_id=:event_id AND attendence=1";
 
