@@ -65,26 +65,6 @@ function predictAttendence($event_id) {
         $okay = 0;
         $not_okay = 0;
 
-        if ($statement->rowCount() < 5) {
-            // no or not enough evaluated attendences in the category, use all categories
-            $query = "SELECT evaluation, COUNT(*) FROM 
-                (SELECT evaluation FROM tblAttendence 
-                LEFT JOIN tblEvents 
-                ON tblAttendence.event_id=tblEvents.event_id 
-                WHERE member_id=:member_id 
-                AND evaluation IS NOT NULL 
-                ORDER BY date 
-                LIMIT 10) att 
-                GROUP BY evaluation";
-            $statement = $db_conn->prepare($query);
-            $statement->bindParam(":member_id", $member_id);
-
-            if (!$statement->execute()) {
-                http_response_code(500);
-                return;
-            }
-        }
-
         while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
             switch ($row['evaluation']) {
             case 0:
