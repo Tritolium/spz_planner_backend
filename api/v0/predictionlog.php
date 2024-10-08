@@ -26,6 +26,7 @@ function predictAttendence($event_id) {
 
     $prob_missing = 0;
     $prob_attending = 0;
+    $prob_signout = 0;
 
     $members = array();
 
@@ -64,26 +65,7 @@ function predictAttendence($event_id) {
 
         $okay = 0;
         $not_okay = 0;
-
-        if ($statement->rowCount() < 5) {
-            // no or not enough evaluated attendences in the category, use all categories
-            $query = "SELECT evaluation, COUNT(*) FROM 
-                (SELECT evaluation FROM tblAttendence 
-                LEFT JOIN tblEvents 
-                ON tblAttendence.event_id=tblEvents.event_id 
-                WHERE member_id=:member_id 
-                AND evaluation IS NOT NULL 
-                ORDER BY date 
-                LIMIT 10) att 
-                GROUP BY evaluation";
-            $statement = $db_conn->prepare($query);
-            $statement->bindParam(":member_id", $member_id);
-
-            if (!$statement->execute()) {
-                http_response_code(500);
-                return;
-            }
-        }
+        $signout = 0;
 
         while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
             switch ($row['evaluation']) {
@@ -91,26 +73,31 @@ function predictAttendence($event_id) {
             case 1:
                 $not_okay += intval($row['COUNT(*)']);
                 break;
+            case 2:
+                $signout += intval($row['COUNT(*)']);
+                break;
             default:
                 $okay += intval($row['COUNT(*)']);
                 break;
             }
         }
 
-        if ($okay + $not_okay == 0) {
+        if ($okay + $not_okay + $signout == 0) {
             // no evaluated attendences
             $prob_missing += 1;
             continue;
         }
 
-        if ($not_okay / ($not_okay + $okay) >= 0.1) {
+        if ($signout / ($okay + $not_okay + $signout) >= 0.9) {
+            $prob_signout += 1;
+        } else if ($not_okay / ($not_okay + $okay + $signout) >= 0.1) {
             $prob_missing += 1;
         } else {
             $prob_attending += 1;
         }
     }
 
-    return [$prob_attending, $prob_missing];
+    return [$prob_attending, $prob_missing, $prob_signout];
 }
 
 ?>
