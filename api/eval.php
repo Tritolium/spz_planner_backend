@@ -65,7 +65,7 @@ function getEventEvalByUsergroup($usergroup_id)
         $maybe = getEventMaybeCount($event_item[0], $usergroup_id);
         $missing = getEventMissingCount($event_item[0], $usergroup_id);
         $plusone = getEventPlusOneCount($event_item[0], $usergroup_id);
-        [$prob_attending, $prob_missing] = predictAttendence($event_item[0]);
+        [$prob_attending, $prob_missing, $prob_signout] = predictAttendence($event_item[0]);
 
         $instruments = getEventInstruments($event_item[0]);
 
@@ -80,6 +80,7 @@ function getEventEvalByUsergroup($usergroup_id)
             "Missing"  => $missing,
             "ProbAttending" => $prob_attending,
             "ProbMissing" => $prob_missing,
+            "ProbSignout" => $prob_signout,
             "PlusOne"  => boolval($event_item[4]) ? intval($plusone) : null,
             "Instruments" => $instruments
         );
@@ -571,7 +572,7 @@ function setEventEval($event_id, $evaluation)
     $row = $statement->fetch(PDO::FETCH_ASSOC);
     $consent = intval($row['consent']);
 
-    [$prob_attending, $prob_missing] = predictAttendence($event_id);
+    [$prob_attending, $prob_missing, $prob_signout] = predictAttendence($event_id);
 
     $prediction = $consent + $prob_attending;
 

@@ -131,7 +131,7 @@ function getAttendence($event_id = null) {
             }
         }
 
-        [$prob_attending, $prob_missing] = predictAttendence($event_id);
+        [$prob_attending, $prob_missing, $prob_signout] = predictAttendence($event_id);
 
         $attendence = array(
             "Event_ID" => $event_id,
@@ -141,6 +141,7 @@ function getAttendence($event_id = null) {
             "Missing" => $missing,
             "ProbAttending" => $prob_attending,
             "ProbMissing" => $prob_missing,
+            "ProbSignout" => $prob_signout,
             "PlusOne" => $plusone
         );
 
