@@ -202,6 +202,10 @@ function lastLogin($api_token, $data, $update)
     if(isset($data->Dimension)){
         $dimension = $data->Dimension;
     }
+    $device_uuid = NULL;
+    if(isset($data->DeviceUUID)){
+        $device_uuid = $data->DeviceUUID;
+    }
     
 
     $query = "UPDATE tblMembers SET last_login=CURRENT_TIMESTAMP, last_display=:displaymode, last_version=:version, u_agent=:u_agent WHERE api_token=:api_token";
@@ -238,8 +242,9 @@ function lastLogin($api_token, $data, $update)
         $ua = "<p>User Agent: " . htmlspecialchars($engine . " " . $device, ENT_QUOTES) . "</p>";
         $dim = "<p>Dimension: " . $dimension . "</p>";
         $name = isset($data->Name) ? "<p>Name: " . $data->Name . "</p>" : "<p>Name: not set</p>";
+        $uuid = isset($data->DeviceID) ? "<p>Device ID: " . $device_uuid . "</p>" : "<p>Device ID: not set</p>";
 
-        $message = "<html><body>" . $token . $display . $ver . $ua . $dim . $name . "</body></html>";
+        $message = "<html><body>" . $token . $display . $ver . $ua . $dim . $name . $uuid . "</body></html>";
 
         $headers = "From: <" . $env['ADMIN_MAIL'] . ">";
 
@@ -253,7 +258,27 @@ function lastLogin($api_token, $data, $update)
         return;
     }
 
-    $query = "INSERT INTO tblLogin (member_id, login_update, version, display, dimension, u_agent) VALUES (:member_id, :login_update, :version, :display, :dimension, :u_agent)";
+    // get device id for device uuid
+    $query = "SELECT device_id FROM tblDevices WHERE device_uuid=:device_uuid";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":device_uuid", $device_uuid);
+    $statement->execute();
+
+    if($statement->rowCount() == 0 && $device_uuid !== NULL){
+        $query = "INSERT INTO tblDevices (device_uuid) VALUES (:device_uuid)";
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(":device_uuid", $device_uuid);
+        $statement->execute();
+
+        $device_id = $db_conn->lastInsertId();
+    } else if ($statement->rowCount() == 1) {
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        $device_id = $row['device_id'];
+    } else {
+        $device_id = NULL;
+    }
+
+    $query = "INSERT INTO tblLogin (member_id, login_update, version, display, dimension, u_agent, device_id) VALUES (:member_id, :login_update, :version, :display, :dimension, :u_agent, :device_id)";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":member_id", $member_id);
     $statement->bindParam(":login_update", $update);
@@ -261,6 +286,7 @@ function lastLogin($api_token, $data, $update)
     $statement->bindParam(":display", $displayMode);
     $statement->bindParam(":dimension", $dimension);
     $statement->bindValue(":u_agent", htmlspecialchars($engine . " " . $device, ENT_QUOTES));
+    $statement->bindParam(":device_id", $device_id);
     $statement->execute();
 }
 
