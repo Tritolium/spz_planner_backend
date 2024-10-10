@@ -540,6 +540,7 @@ function getStatistics($api_token)
 
 function setEventEval($event_id, $evaluation)
 {
+    require_once __DIR__ . '/v0/config/permission-helper.php';
     $database = new Database();
     $db_conn = $database->getConnection();
 
