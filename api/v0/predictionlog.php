@@ -64,7 +64,7 @@ function predictAttendencePerMember($member_id, $event_id) {
         WHERE member_id=:member_id 
         AND evaluation IS NOT NULL 
         AND category=(SELECT category FROM tblEvents WHERE event_id=:event_id)
-        ORDER BY date
+        ORDER BY date DESC
         LIMIT 10) att 
         GROUP BY evaluation";
     $statement = $db_conn->prepare($query);
