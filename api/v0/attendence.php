@@ -71,6 +71,7 @@ function getAttendence($event_id = null) {
                 "Location" => $location,
                 "Address" => $address,
                 "Category" => $category,
+                "State" => $state,
                 "Date" => $date,
                 "Begin" => $begin,
                 "Departure" => $departure,
@@ -175,7 +176,7 @@ function getAttendence($event_id = null) {
     } else {
         if (!isset($_GET['usergroup_id'])) {
             // get attendence for all events for the user
-            $query = "SELECT events.event_id, category, type, location, address, date, ev_plusone, begin, departure, leave_dep, attendence, events.usergroup_id, association_id, clothing, plusone FROM (SELECT event_id, category, t4.member_id, type, location, address, date, plusone as ev_plusone, begin, departure, leave_dep, accepted, t2.usergroup_id, clothing FROM tblEvents t 
+            $query = "SELECT events.event_id, category, state, type, location, address, date, ev_plusone, begin, departure, leave_dep, attendence, events.usergroup_id, association_id, clothing, plusone FROM (SELECT event_id, category, state, t4.member_id, type, location, address, date, plusone as ev_plusone, begin, departure, leave_dep, accepted, t2.usergroup_id, clothing FROM tblEvents t 
             LEFT JOIN tblUsergroupAssignments t2 
             ON t.usergroup_id = t2.usergroup_id
             LEFT JOIN tblMembers t4 
@@ -199,6 +200,7 @@ function getAttendence($event_id = null) {
                     $attendence_item = array(
                         "Event_ID"       => intval($event_id),
                         "Category"       => $category,
+                        "State"          => $state,
                         "Attendence"     => (is_null($attendence)) ? -1 : intval($attendence),
                         "Type"           => $type,
                         "Location"       => $location,
