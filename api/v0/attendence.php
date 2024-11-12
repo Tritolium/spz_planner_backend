@@ -126,7 +126,7 @@ function getAttendence($event_id = null) {
                         $consent = intval($row['COUNT(*)']);
                     break;
                 case 2:
-                    $maybe = intval($row['COUNT(*)']);
+                    $maybe += intval($row['COUNT(*)']);
                     break;
             }
         }
@@ -316,6 +316,10 @@ function updateAttendence($event_id) {
     $db_conn = $database->getConnection();
 
     $data = json_decode(file_get_contents("php://input"));
+
+    if (!isset($data->PlusOne)) {
+        $data->PlusOne = false;
+    }
 
     if (!isset($data->Member_ID)) {
         $query = "SELECT member_id FROM tblMembers WHERE api_token=:api_token";
