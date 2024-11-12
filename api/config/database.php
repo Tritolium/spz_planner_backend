@@ -3,12 +3,13 @@ class Database{
     private $host = "";
     private $db_name = "spzroenkhausen_planer";
     private $username = "spzroenkhausen_admin";
-    private $password = "Spielmannszug";
+    private $password;
     public $conn;
 
     function __construct() {
         $env = parse_ini_file(__DIR__ . '/../.env');
         $this->host = $env['DB_HOST'];
+        $this->password = $env['DB_PASS'];
     }
 
 
