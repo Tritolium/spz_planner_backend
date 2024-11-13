@@ -275,6 +275,7 @@ function getAttendence($event_id = null) {
                             array_push($event_arr, $att_item);
                         } else {
                             $ev = array(
+                                "Event_ID" => $event_id,
                                 "Type" => $type,
                                 "Location" => $location,
                                 "Date" => $date,
@@ -299,6 +300,7 @@ function getAttendence($event_id = null) {
                     }
 
                     $ev = array(
+                        "Event_ID" => $event_id,
                         "Type" => $type,
                         "Location" => $location,
                         "Date" => $date,
