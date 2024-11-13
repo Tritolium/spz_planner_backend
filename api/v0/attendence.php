@@ -224,7 +224,8 @@ function getAttendence($event_id = null) {
             require_once __DIR__ . '/predictionlog.php';
             // get attendence for all members of the usergroup
             $query = "SELECT users.usergroup_id, users.member_id, forename, surname, 
-                t3.event_id, type, location, date, attendence, evaluation, t4.plusone
+                t3.event_id, type, location, date, attendence, evaluation, t4.plusone,
+                t3.category
                 FROM
                 (SELECT usergroup_id, t.member_id, forename, surname 
                 FROM tblMembers t 
@@ -252,6 +253,7 @@ function getAttendence($event_id = null) {
                     [$_att, $_miss, $_sign] = predictAttendencePerMember($member_id, $event_id);
                     $prediction = 0*$_att + 1*$_miss + 2*$_sign;
                     $att_item = array(
+                        "Member_ID" => $member_id,
                         "Fullname" => $forename . " " . $surname,
                         "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
                         "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone),
@@ -264,6 +266,7 @@ function getAttendence($event_id = null) {
                             [$_att, $_miss, $_sign] = predictAttendencePerMember($member_id, $event_id);
                             $prediction = 0*$_att + 1*$_miss + 2*$_sign;
                             $att_item = array(
+                                "Member_ID" => $member_id,
                                 "Fullname" => $forename . " " . $surname,
                                 "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
                                 "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone),
@@ -275,6 +278,7 @@ function getAttendence($event_id = null) {
                                 "Type" => $type,
                                 "Location" => $location,
                                 "Date" => $date,
+                                "Category" => $category,
                                 "Attendences" => $event_arr
                             );
                             array_push($attendence_arr, $ev);
@@ -284,6 +288,7 @@ function getAttendence($event_id = null) {
                             [$_att, $_miss, $_sign] = predictAttendencePerMember($member_id, $event_id);
                             $prediction = 0*$_att + 1*$_miss + 2*$_sign;
                             $att_item = array(
+                                "Member_ID" => $member_id,
                                 "Fullname" => $forename . " " . $surname,
                                 "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
                                 "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone),
@@ -297,6 +302,7 @@ function getAttendence($event_id = null) {
                         "Type" => $type,
                         "Location" => $location,
                         "Date" => $date,
+                        "Category" => $category,
                         "Attendences" => $event_arr
                     );
                     array_push($attendence_arr, $ev);
