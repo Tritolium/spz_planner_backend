@@ -256,4 +256,40 @@ function createMember() {
     echo json_encode($data);
 }
 
+function updateMember($member_id) {
+    require_once __DIR__ . '/../config/database.php';
+    require_once __DIR__ . '/config/permission-helper.php';
+
+    $database = new Database();
+    $conn = $database->getConnection();
+
+    $data = json_decode(file_get_contents('php://input'));
+
+    // check if the user is allowed to update the member
+    if (!hasPermission($_GET['api_token'], 2)) {
+        http_response_code(403);
+        exit();
+    }
+
+    $query = "UPDATE tblMembers SET forename = :forename, surname = :surname, auth_level = :auth_level, 
+        nicknames = :nicknames, birthdate = :birthdate, instrument = :instrument 
+        WHERE member_id = :member_id";
+
+    $stmt = $conn->prepare($query);
+    $stmt->bindParam(':forename', $data->Forename);
+    $stmt->bindParam(':surname', $data->Surname);
+    $stmt->bindParam(':auth_level', $data->Auth_level);
+    $stmt->bindParam(':nicknames', $data->Nicknames);
+    $stmt->bindValue(':birthdate', ($data->Birthdate == "") ? null : $data->Birthdate);
+    $stmt->bindParam(':instrument', $data->Instrument);
+    // TODO: implement theme
+    $stmt->bindParam(':member_id', $member_id);
+
+    if (!$stmt->execute()) {
+        http_response_code(500);
+        exit();
+    }
+
+    http_response_code(204);
+}
 ?>
