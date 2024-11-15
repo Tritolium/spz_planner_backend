@@ -96,7 +96,7 @@ function getEvents($id = null) {
                 "Begin" => ($begin == "12:34:56") ? null : $begin,
                 "Departure" => ($departure == "12:34:56") ? null : $departure,
                 "Leave_dep" => ($leave_dep == "12:34:56") ? null : $leave_dep,
-                "Accepted" => boolval($accepted),
+                "Accepted" => boolval($accepted), // TODO: remove when no user uses v0.15 anymore
                 "PlusOne" => boolval($plusone),
                 "Clothing" => intval($clothing),
                 "Usergroup_ID" => intval($usergroup_id),
@@ -179,7 +179,7 @@ function getEvents($id = null) {
                 "Begin" => ($begin == "12:34:56") ? null : $begin,
                 "Departure" => ($departure == "12:34:56") ? null : $departure,
                 "Leave_dep" => ($leave_dep == "12:34:56") ? null : $leave_dep,
-                "Accepted" => boolval($accepted),
+                "Accepted" => boolval($accepted), // TODO: remove when no user uses v0.15 anymore
                 "PlusOne" => boolval($plusone),
                 "Clothing" => intval($clothing),
                 "Usergroup_ID" => intval($usergroup_id),
@@ -311,7 +311,7 @@ function updateEvent($id) {
     $statement->bindParam(":begin", $data->Begin);
     $statement->bindParam(":departure", $data->Departure);
     $statement->bindParam(":leave_dep", $data->Leave_dep);
-    $statement->bindValue(":accepted", $data->Accepted ? 1 : 0);
+    $statement->bindValue(":accepted", isset($data->Accepted) ? $data->Accepted ? 1 : 0 : 1); // TODO: remove line when no user uses v0.15 anymore
     $statement->bindValue(":plusone", $data->PlusOne ? 1 : 0);
     $statement->bindParam(":clothing", $data->Clothing);
     $statement->bindParam(":usergroup_id", $data->Usergroup_ID);
@@ -345,7 +345,7 @@ function createEvent() {
     $statement->bindParam(":begin", $data->Begin);
     $statement->bindParam(":departure", $data->Departure);
     $statement->bindParam(":leave_dep", $data->Leave_dep);
-    $statement->bindParam(":accepted", $data->Accepted);
+    $statement->bindValue(":accepted", isset($data->Accepted) ? $data->Accepted ? 1 : 0 : 1); // TODO: remove line when no user uses v0.15 anymore
     $statement->bindValue(":plusone", $data->PlusOne ? 1 : 0);
     $statement->bindParam(":clothing", $data->Clothing);
     $statement->bindParam(":usergroup_id", $data->Usergroup_ID);
