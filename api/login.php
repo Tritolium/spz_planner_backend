@@ -206,7 +206,14 @@ function lastLogin($api_token, $data, $update)
     if(isset($data->DeviceUUID)){
         $device_uuid = $data->DeviceUUID;
     }
-    
+    $darkmode = NULL;
+    $lightmode = NULL;
+    $forced_colors = NULL;
+    if(isset($data->Preferences)){
+        $darkmode = $data->Preferences->darkmode ?? NULL;
+        $lightmode = $data->Preferences->lightmode;
+        $forced_colors = $data->Preferences->forcedcolors;
+    }    
 
     $query = "UPDATE tblMembers SET last_login=CURRENT_TIMESTAMP, last_display=:displaymode, last_version=:version, u_agent=:u_agent WHERE api_token=:api_token";
     $statement = $db_conn->prepare($query);
@@ -265,15 +272,26 @@ function lastLogin($api_token, $data, $update)
     $statement->execute();
 
     if($statement->rowCount() == 0 && $device_uuid !== NULL){
-        $query = "INSERT INTO tblDevices (device_uuid) VALUES (:device_uuid)";
+        $query = "INSERT INTO tblDevices (device_uuid, darkmode, lightmode, forced_colors) VALUES (:device_uuid, :darkmode, :lightmode, :forced_colors)";
         $statement = $db_conn->prepare($query);
         $statement->bindParam(":device_uuid", $device_uuid);
+        $statement->bindValue(":darkmode", $darkmode ? 1 : 0);
+        $statement->bindValue(":lightmode", $lightmode ? 1 : 0);
+        $statement->bindValue(":forced_colors", $forced_colors ? 1 : 0);
         $statement->execute();
 
         $device_id = $db_conn->lastInsertId();
     } else if ($statement->rowCount() == 1) {
         $row = $statement->fetch(PDO::FETCH_ASSOC);
         $device_id = $row['device_id'];
+
+        $query = "UPDATE tblDevices SET darkmode=:darkmode, lightmode=:lightmode, forced_colors=:forced_colors WHERE device_id=:device_id";
+        $statement = $db_conn->prepare($query);
+        $statement->bindValue(":darkmode", $darkmode ? 1 : 0);
+        $statement->bindValue(":lightmode", $lightmode ? 1 : 0);
+        $statement->bindValue(":forced_colors", $forced_colors ? 1 : 0);
+        $statement->bindParam(":device_id", $device_id);
+        $statement->execute();
     } else {
         $device_id = NULL;
     }
