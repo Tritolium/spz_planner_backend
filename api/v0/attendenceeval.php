@@ -121,7 +121,9 @@ function getAttendenceEval($event_id = null) {
             LEFT JOIN tblAttendence t4 
             ON users.member_id = t4.member_id 
             AND t4.event_id = t3.event_id
-            WHERE evaluated=1 AND accepted=1 AND date >= '2023-01-01'
+            WHERE evaluated=1 
+            AND state = 1
+            AND date >= '2023-01-01'
             ORDER BY date, begin, surname, forename";
 
         $statement = $db_conn->prepare($query);

@@ -91,11 +91,12 @@ function getEvents($id = null) {
                 "Location" => $location,
                 "Address" => $address,
                 "Category" => $category,
+                "State" => $state,
                 "Date" => $date,
                 "Begin" => ($begin == "12:34:56") ? null : $begin,
                 "Departure" => ($departure == "12:34:56") ? null : $departure,
                 "Leave_dep" => ($leave_dep == "12:34:56") ? null : $leave_dep,
-                "Accepted" => boolval($accepted),
+                "Accepted" => boolval($accepted), // TODO: remove when no user uses v0.15 anymore
                 "PlusOne" => boolval($plusone),
                 "Clothing" => intval($clothing),
                 "Usergroup_ID" => intval($usergroup_id),
@@ -173,11 +174,12 @@ function getEvents($id = null) {
                 "Location" => $location,
                 "Address" => $address,
                 "Category" => $category,
+                "State" => $state,
                 "Date" => $date,
                 "Begin" => ($begin == "12:34:56") ? null : $begin,
                 "Departure" => ($departure == "12:34:56") ? null : $departure,
                 "Leave_dep" => ($leave_dep == "12:34:56") ? null : $leave_dep,
-                "Accepted" => boolval($accepted),
+                "Accepted" => boolval($accepted), // TODO: remove when no user uses v0.15 anymore
                 "PlusOne" => boolval($plusone),
                 "Clothing" => intval($clothing),
                 "Usergroup_ID" => intval($usergroup_id),
@@ -204,7 +206,7 @@ function getNextEvents() {
                 (SELECT member_id FROM tblMembers 
                 WHERE api_token = :api_token))
         AND date >= CURDATE()
-        AND accepted = 1
+        AND state != 2
         AND category = :category
         AND evaluated = 0
         ORDER BY date ASC";
@@ -230,8 +232,8 @@ function getNextEvents() {
     array_push($events, intval($event_id));
     $head_date = new DateTime($date);
 
-    // if the type contains "Abgesagt", get the next event
-    while (strpos($type, 'Abgesagt') !== false) {
+    // if the type contains "Abgesagt" or state is 3 (canceled), get the next event
+    while (strpos($type, 'Abgesagt') !== false || $state == '3') {
         $row = $statement->fetch(PDO::FETCH_ASSOC);
         extract($row);
         array_push($events, intval($event_id));
@@ -262,7 +264,7 @@ function getFixedEvents() {
                 (SELECT member_id FROM tblMembers 
                 WHERE api_token = :api_token))
         AND date >= CURDATE()
-        AND accepted = 1
+        AND state < 2
         AND fixed = 1
         AND evaluated = 0
         ORDER BY date ASC";
@@ -296,18 +298,19 @@ function updateEvent($id) {
 
     $data = json_decode(file_get_contents("php://input"));
 
-    $query = "UPDATE tblEvents SET type = :type, location = :location, address = :address, category = :category, date = :date, begin = :begin, departure = :departure, leave_dep = :leave_dep, accepted = :accepted, plusone = :plusone, clothing = :clothing, usergroup_id = :usergroup_id, fixed = :fixed, push = :push WHERE event_id = :event_id";
+    $query = "UPDATE tblEvents SET type = :type, location = :location, address = :address, category = :category, state = :state, date = :date, begin = :begin, departure = :departure, leave_dep = :leave_dep, accepted = :accepted, plusone = :plusone, clothing = :clothing, usergroup_id = :usergroup_id, fixed = :fixed, push = :push WHERE event_id = :event_id";
     $statement = $db_conn->prepare($query);
 
     $statement->bindParam(":type", $data->Type);
     $statement->bindParam(":location", $data->Location);
     $statement->bindParam(":address", $data->Address);
     $statement->bindParam(":category", $data->Category);
+    $statement->bindValue(":state", isset($data->State) ? $data->State : 1); // TODO: remove isset check when no user uses v0.15 anymore
     $statement->bindParam(":date", $data->Date);
     $statement->bindParam(":begin", $data->Begin);
     $statement->bindParam(":departure", $data->Departure);
     $statement->bindParam(":leave_dep", $data->Leave_dep);
-    $statement->bindValue(":accepted", $data->Accepted ? 1 : 0);
+    $statement->bindValue(":accepted", isset($data->Accepted) ? $data->Accepted ? 1 : 0 : 1); // TODO: remove line when no user uses v0.15 anymore
     $statement->bindValue(":plusone", $data->PlusOne ? 1 : 0);
     $statement->bindParam(":clothing", $data->Clothing);
     $statement->bindParam(":usergroup_id", $data->Usergroup_ID);
@@ -329,18 +332,19 @@ function createEvent() {
 
     $data = json_decode(file_get_contents("php://input"));
 
-    $query = "INSERT INTO tblEvents (type, location, address, category, date, begin, departure, leave_dep, accepted, plusone, clothing, usergroup_id, fixed, push) VALUES (:type, :location, :address, :category, :date, :begin, :departure, :leave_dep, :accepted, :plusone, :clothing, :usergroup_id, :fixed, :push); SELECT LAST_INSERT_ID()";
+    $query = "INSERT INTO tblEvents (type, location, address, category, state, date, begin, departure, leave_dep, accepted, plusone, clothing, usergroup_id, fixed, push) VALUES (:type, :location, :address, :category, :state, :date, :begin, :departure, :leave_dep, :accepted, :plusone, :clothing, :usergroup_id, :fixed, :push); SELECT LAST_INSERT_ID()";
     $statement = $db_conn->prepare($query);
 
     $statement->bindParam(":type", $data->Type);
     $statement->bindParam(":location", $data->Location);
     $statement->bindParam(":address", $data->Address);
     $statement->bindParam(":category", $data->Category);
+    $statement->bindValue(":state", isset($data->State) ? $data->State : 1); // TODO: remove isset check when no user uses v0.15 anymore
     $statement->bindParam(":date", $data->Date);
     $statement->bindParam(":begin", $data->Begin);
     $statement->bindParam(":departure", $data->Departure);
     $statement->bindParam(":leave_dep", $data->Leave_dep);
-    $statement->bindParam(":accepted", $data->Accepted);
+    $statement->bindValue(":accepted", isset($data->Accepted) ? $data->Accepted ? 1 : 0 : 1); // TODO: remove line when no user uses v0.15 anymore
     $statement->bindValue(":plusone", $data->PlusOne ? 1 : 0);
     $statement->bindParam(":clothing", $data->Clothing);
     $statement->bindParam(":usergroup_id", $data->Usergroup_ID);
