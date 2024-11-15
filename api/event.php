@@ -1,4 +1,5 @@
 <?php
+// TODO: remove file when new prediction_logger is deployed
 include_once './config/database.php';
 include_once './model/event.php';
 

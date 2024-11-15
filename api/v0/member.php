@@ -116,8 +116,9 @@ function getMember($member_id) {
             exit();
         }
 
-        // for each member get the roles
+        // for each member get the roles and usergroups
         foreach ($members as $index => $member) {
+            // roles
             $query = "SELECT role_id, association_id FROM tblUserRoles WHERE member_id = :member_id 
                 AND association_id IN 
                     (SELECT association_id FROM tblAssociationAssignments taa 
@@ -142,6 +143,30 @@ function getMember($member_id) {
                     $members[$index]['Roles'][$association_id] = [];
                 }
                 array_push($members[$index]['Roles'][$association_id], $role_id);
+            }
+
+            // usergroups
+            $query = "SELECT usergroup_id FROM tblUsergroupAssignments WHERE member_id = :member_id
+                AND usergroup_id IN (
+                    SELECT usergroup_id FROM tblUsergroupAssignments taa 
+                    LEFT JOIN tblMembers tm 
+                    ON taa.member_id = tm.member_id 
+                    WHERE api_token = :api_token
+                )";
+            $stmt = $conn->prepare($query);
+            $stmt->bindParam(':member_id', $member['Member_ID']);
+            $stmt->bindParam(':api_token', $_GET['api_token']);
+
+            if (!$stmt->execute()) {
+                http_response_code(500);
+                exit();
+            }
+
+            $members[$index]['Usergroups'] = array();
+
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                extract($row);
+                array_push($members[$index]['Usergroups'], $usergroup_id);
             }
         }
 
@@ -179,6 +204,23 @@ function getMember($member_id) {
             'Theme' => $theme
         );
 
+        // get the usergroups
+        $query = "SELECT usergroup_id FROM tblUsergroupAssignments WHERE member_id = :member_id";
+        $stmt = $conn->prepare($query);
+        $stmt->bindParam(':member_id', $member_id);
+
+        if (!$stmt->execute()) {
+            http_response_code(500);
+            exit();
+        }
+
+        $member['Usergroups'] = array();
+
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            extract($row);
+            array_push($member['Usergroups'], $usergroup_id);
+        }
+
         http_response_code(200);
         echo json_encode($member);
     }
@@ -214,4 +256,40 @@ function createMember() {
     echo json_encode($data);
 }
 
+function updateMember($member_id) {
+    require_once __DIR__ . '/../config/database.php';
+    require_once __DIR__ . '/config/permission-helper.php';
+
+    $database = new Database();
+    $conn = $database->getConnection();
+
+    $data = json_decode(file_get_contents('php://input'));
+
+    // check if the user is allowed to update the member
+    if (!hasPermission($_GET['api_token'], 2)) {
+        http_response_code(403);
+        exit();
+    }
+
+    $query = "UPDATE tblMembers SET forename = :forename, surname = :surname, auth_level = :auth_level, 
+        nicknames = :nicknames, birthdate = :birthdate, instrument = :instrument 
+        WHERE member_id = :member_id";
+
+    $stmt = $conn->prepare($query);
+    $stmt->bindParam(':forename', $data->Forename);
+    $stmt->bindParam(':surname', $data->Surname);
+    $stmt->bindParam(':auth_level', $data->Auth_level);
+    $stmt->bindParam(':nicknames', $data->Nicknames);
+    $stmt->bindValue(':birthdate', ($data->Birthdate == "") ? null : $data->Birthdate);
+    $stmt->bindParam(':instrument', $data->Instrument);
+    // TODO: implement theme
+    $stmt->bindParam(':member_id', $member_id);
+
+    if (!$stmt->execute()) {
+        http_response_code(500);
+        exit();
+    }
+
+    http_response_code(204);
+}
 ?>

@@ -1,4 +1,5 @@
 <?php
+// TODO: remove file when no user uses v0.15 of the app anymore
 include_once './config/database.php';
 include_once './model/member.php';
 

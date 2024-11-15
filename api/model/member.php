@@ -1,4 +1,5 @@
 <?php
+// TODO: remove file when no user uses v0.15 of the app anymore
 class Member {
     private $conn;
     private $table_name = "spzroenkhausen_planer.tblMembers";
