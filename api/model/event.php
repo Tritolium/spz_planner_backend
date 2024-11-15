@@ -1,4 +1,5 @@
 <?php
+// TODO: remove file when new prediction_logger is deployed
 class Event {
     private $conn;
     private $table_name = "spzroenkhausen_planer.tblEvents";
