@@ -206,7 +206,6 @@ function getNextEvents() {
                 (SELECT member_id FROM tblMembers 
                 WHERE api_token = :api_token))
         AND date >= CURDATE()
-        AND accepted = 1
         AND state != 2
         AND category = :category
         AND evaluated = 0
@@ -265,7 +264,7 @@ function getFixedEvents() {
                 (SELECT member_id FROM tblMembers 
                 WHERE api_token = :api_token))
         AND date >= CURDATE()
-        AND accepted = 1
+        AND state < 2
         AND fixed = 1
         AND evaluated = 0
         ORDER BY date ASC";

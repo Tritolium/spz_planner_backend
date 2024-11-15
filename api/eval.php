@@ -46,7 +46,7 @@ function getEventEvalByUsergroup($usergroup_id)
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT event_id, type, location, date, plusone AS ev_plusone FROM tblEvents WHERE date >= curdate() AND accepted=1 AND usergroup_id=:usergroup_id ORDER BY date";
+    $query = "SELECT event_id, type, location, date, plusone AS ev_plusone FROM tblEvents WHERE date >= curdate() AND state = 1 AND usergroup_id=:usergroup_id ORDER BY date";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":usergroup_id", $usergroup_id);
     $statement->execute();
