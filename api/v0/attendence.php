@@ -174,6 +174,52 @@ function getAttendence($event_id = null) {
             'Attendence' => $attendence
         ));
     } else {
+        // check if the request comes from prediction server
+        if (isset($_GET['xgboost'])) {
+            $query = "SELECT * FROM tblAuth WHERE token=:token";
+            $statement = $db_conn->prepare($query);
+            $statement->bindParam(":token", $_GET['api_token']);
+
+            if ($statement->execute()) {
+                if ($statement->rowCount() == 1) {
+                    // the request comes from the prediction server
+                    $query = "SELECT member_id, attendence, evaluation, type, category, date 
+                        FROM tblAttendence 
+                        LEFT JOIN tblEvents 
+                        ON tblAttendence.event_id=tblEvents.event_id 
+                        WHERE evaluation IS NOT null";
+                    
+                    $statement = $db_conn->prepare($query);
+
+                    if ($statement->execute()) {
+                        $attendence_arr = array();
+                        while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+                            extract($row);
+                            $attendence_item = array(
+                                "member_id" => $member_id,
+                                "attendence" => intval($attendence),
+                                "evaluation" => intval($evaluation),
+                                "type" => $type,
+                                "category" => $category,
+                                "date" => $date
+                            );
+                            array_push($attendence_arr, $attendence_item);
+                        }
+                        echo json_encode($attendence_arr);
+                        return;
+                    } else {
+                        http_response_code(500);
+                        return;
+                    }
+                } else {
+                    http_response_code(401);
+                    return;
+                }
+            } else {
+                http_response_code(500);
+                return;
+            }
+        }
         if (!isset($_GET['usergroup_id'])) {
             // get attendence for all events for the user
             $query = "SELECT events.event_id, category, state, type, location, address, date, ev_plusone, begin, departure, leave_dep, attendence, events.usergroup_id, association_id, clothing, plusone FROM (SELECT event_id, category, state, t4.member_id, type, location, address, date, plusone as ev_plusone, begin, departure, leave_dep, t2.usergroup_id, clothing FROM tblEvents t 
