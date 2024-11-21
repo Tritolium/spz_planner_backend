@@ -289,7 +289,7 @@ function getAttendence($event_id = null) {
                 AND t4.event_id = t3.event_id
                 WHERE date >= curdate()
                 AND state < 2
-                ORDER BY date, begin, surname, forename";
+                ORDER BY date, begin, t3.event_id, surname, forename";
 
             $statement = $db_conn->prepare($query);
             $statement->bindValue(':usergroup_id', $_GET['usergroup_id']);
