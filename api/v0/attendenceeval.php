@@ -51,6 +51,8 @@ function getAttendenceEval($event_id = null) {
     $database = new Database();
     $db_conn = $database->getConnection();
 
+    require_once './predictionlog.php';
+
     if ($event_id != null) {
         $query = "SELECT ug.member_id, attendence, timestamp, forename, surname 
             FROM (SELECT event_id, member_id 
@@ -75,9 +77,15 @@ function getAttendenceEval($event_id = null) {
         $attendence_arr = array();
         while($row = $statement->fetch(PDO::FETCH_ASSOC)){
             extract($row);
+
+            [$_att, $_miss, $_sign] = predictAttendencePerMember($member_id, $event_id);
+
+            $prediction = 0*$_att + 1*$_miss + 2*$_sign;
+
             $attendence_item = array(
                 "Member_ID" => intval($member_id),
                 "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
+                "Prediction" => $prediction,
                 "Timestamp" => $timestamp,
                 "Fullname" => $forename . " " . $surname
             );
