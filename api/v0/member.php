@@ -25,7 +25,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
         createMember();
         break;
     case 'PUT':
-        updateMember($member_id);
+        updateMember($member_id, isset($request_exploded[3]) && $request_exploded[3] == 'associationassignment');
         break;
     case 'OPTIONS':
         http_response_code(200);
@@ -116,7 +116,7 @@ function getMember($member_id) {
             exit();
         }
 
-        // for each member get the roles and usergroups
+        // for each member get the roles, usergroups and associations
         foreach ($members as $index => $member) {
             // roles
             $query = "SELECT role_id, association_id FROM tblUserRoles WHERE member_id = :member_id 
@@ -167,6 +167,30 @@ function getMember($member_id) {
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 extract($row);
                 array_push($members[$index]['Usergroups'], $usergroup_id);
+            }
+
+            // associations
+            $query = "SELECT association_id FROM tblAssociationAssignments WHERE member_id = :member_id
+                AND association_id IN (
+                    SELECT association_id FROM tblAssociationAssignments taa 
+                    LEFT JOIN tblMembers tm 
+                    ON taa.member_id = tm.member_id 
+                    WHERE api_token = :api_token
+                )";
+            $stmt = $conn->prepare($query);
+            $stmt->bindParam(':member_id', $member['Member_ID']);
+            $stmt->bindParam(':api_token', $_GET['api_token']);
+
+            if (!$stmt->execute()) {
+                http_response_code(500);
+                exit();
+            }
+
+            $members[$index]['Associations'] = array();
+
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                extract($row);
+                array_push($members[$index]['Associations'], $association_id);
             }
         }
 
@@ -256,7 +280,7 @@ function createMember() {
     echo json_encode($data);
 }
 
-function updateMember($member_id) {
+function updateMember($member_id, $assingment) {
     require_once __DIR__ . '/../config/database.php';
     require_once __DIR__ . '/config/permission-helper.php';
 
@@ -264,6 +288,33 @@ function updateMember($member_id) {
     $conn = $database->getConnection();
 
     $data = json_decode(file_get_contents('php://input'));
+
+    // parse URL against api/v0/member/{member_id}/associationassignment
+    if ($assingment) {
+        // TODO add permission for association assignments
+        foreach ($data as $association_id => $assignment_values) {
+            if (!$assignment_values->assign) {
+                $query = "DELETE FROM tblAssociationAssignments WHERE member_id = :member_id AND association_id = :association_id";
+                $stmt = $conn->prepare($query);
+                $stmt->bindParam(':member_id', $member_id);
+                $stmt->bindParam(':association_id', $association_id);
+            } else {
+                $query = "INSERT INTO tblAssociationAssignments (member_id, association_id, instrument) VALUES (:member_id, :association_id, :instrument) 
+                    ON DUPLICATE KEY UPDATE instrument = :instrument";
+                $stmt = $conn->prepare($query);
+                $stmt->bindParam(':member_id', $member_id);
+                $stmt->bindParam(':association_id', $association_id);
+                $stmt->bindParam(':instrument', $assignment_values->instrument);
+            }
+
+            if (!$stmt->execute()) {
+                http_response_code(500);
+                exit();
+            }
+        }
+        http_response_code(204);
+        exit();
+    }
 
     // check if the user is allowed to update the member
     if (!hasPermission($_GET['api_token'], 2)) {
