@@ -577,13 +577,38 @@ function setEventEval($event_id, $evaluation)
 
     $prediction = $consent + $prob_attending;
 
+    // check if the evaluated member is younger than 16 or no birthday is set
+    // if so, update evaluation to 2 if it is set to 0
+    $query = "SELECT member_id, birthdate FROM tblMembers WHERE member_id=:member_id";
+    $statement = $db_conn->prepare($query);
+    
+    foreach($evaluation as $member_id => &$eval){
+
+        if($eval != 0){
+            continue;
+        }
+
+        $statement->bindParam(":member_id", $member_id);
+        if(!$statement->execute()){
+            http_response_code(500);
+            exit();
+        }
+
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        $birthdate = $row['birthdate'];
+
+        if($birthdate == NULL || $birthdate == "0000-00-00" || date_diff(date_create($birthdate), date_create('today'))->y < 16){
+            $eval = 2;
+        }
+    }
+
     $query = "INSERT INTO tblAttendence (member_id, event_id, evaluation) VALUES (:member_id, :event_id, :evaluation) ON DUPLICATE KEY UPDATE evaluation=:evaluation";
     
-    foreach($evaluation as $member_id => $eval){
+    foreach($evaluation as $member_id => $evalu){
         $statement = $db_conn->prepare($query);
         $statement->bindParam(":member_id", $member_id);
         $statement->bindParam(":event_id", $event_id);
-        $statement->bindParam(":evaluation", $eval);
+        $statement->bindParam(":evaluation", $evalu);
         
         if(!$statement->execute()){
             http_response_code(500);
