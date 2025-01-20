@@ -150,7 +150,7 @@ function getAssociationAssignment($api_token)
     $database = new Database();
     $db_conn = $database->getConnection();
 
-    $query = "SELECT assign.association_id, title, assign.member_id, taa.member_id AS assigned, assign.forename, assign.surname FROM 
+    $query = "SELECT assign.association_id, title, taa.instrument, assign.member_id, taa.member_id AS assigned, assign.forename, assign.surname FROM 
     (SELECT ta.association_id, ta.title, tm.member_id, tm.forename, tm.surname  
     FROM tblAssociations ta 
     JOIN tblMembers tm) AS assign
@@ -181,7 +181,8 @@ function processAssociationAssignmentStatement($statement)
         $association = array(
             "Association_ID"    => intval($association_id),
             "Title"             => $title,
-            "Assigned"          => (is_null($assigned)) ? false : true
+            "Assigned"          => (is_null($assigned)) ? false : true,
+            "Instrument"        => (is_null($instrument)) ? "" : $instrument
         );
 
         array_push($associations, $association);
@@ -192,7 +193,8 @@ function processAssociationAssignmentStatement($statement)
                 $association = array(
                     "Association_ID"    => $association_id,
                     "Title"             => $title,
-                    "Assigned"          => (is_null($assigned)) ? false : true
+                    "Assigned"          => (is_null($assigned)) ? false : true,
+                    "Instrument"        => (is_null($instrument)) ? "" : $instrument
                 );
                 array_push($associations, $association);
             } else {
@@ -210,7 +212,8 @@ function processAssociationAssignmentStatement($statement)
                 $association = array(
                     "Association_ID"    => intval($association_id),
                     "Title"             => $title,
-                    "Assigned"          => (is_null($assigned)) ? false : true
+                    "Assigned"          => (is_null($assigned)) ? false : true,
+                    "Instrument"        => (is_null($instrument)) ? "" : $instrument
                 );
 
                 array_push($associations, $association);
