@@ -271,6 +271,9 @@ function getAttendence($event_id = null) {
             }
         } else {
             require_once __DIR__ . '/predictionlog.php';
+            // get instruments for the members
+            $instruments = getInstruments($_GET['usergroup_id']);
+
             // get attendence for all members of the usergroup
             $query = "SELECT users.usergroup_id, users.member_id, forename, surname, 
                 t3.event_id, type, location, date, attendence, evaluation, t4.plusone,
@@ -307,7 +310,8 @@ function getAttendence($event_id = null) {
                         "Fullname" => $forename . " " . $surname,
                         "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
                         "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone),
-                        "Prediction" => $prediction
+                        "Prediction" => $prediction,
+                        "Instrument" => $instruments[$member_id]
                     );
                     array_push($event_arr, $att_item);
                     while($row = $statement->fetch(PDO::FETCH_ASSOC)){
@@ -320,7 +324,8 @@ function getAttendence($event_id = null) {
                                 "Fullname" => $forename . " " . $surname,
                                 "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
                                 "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone),
-                                "Prediction" => $prediction
+                                "Prediction" => $prediction,
+                                "Instrument" => $instruments[$member_id]
                             );
                             array_push($event_arr, $att_item);
                         } else {
@@ -343,7 +348,8 @@ function getAttendence($event_id = null) {
                                 "Fullname" => $forename . " " . $surname,
                                 "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
                                 "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone),
-                                "Prediction" => $prediction
+                                "Prediction" => $prediction,
+                                "Instrument" => $instruments[$member_id]
                             );
                             array_push($event_arr, $att_item);
                         }
@@ -412,6 +418,27 @@ function updateAttendence($event_id) {
 
     if ($statement->execute()) {
         http_response_code(200);
+    } else {
+        http_response_code(500);
+    }
+}
+
+function getInstruments($usergroup_id) {
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT member_id, instrument FROM tblUsergroups LEFT JOIN tblAssociationAssignments ON tblUsergroups.association_id=tblAssociationAssignments.association_id WHERE usergroup_id = :usergroup_id";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":usergroup_id", $usergroup_id);
+
+    if ($statement->execute()) {
+        $instruments = array();
+        while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+            extract($row);
+            $instruments[$member_id] = is_null($instrument) ? "" : $instrument;
+        }
+
+        return $instruments;
     } else {
         http_response_code(500);
     }
