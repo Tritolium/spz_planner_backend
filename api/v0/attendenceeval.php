@@ -158,6 +158,7 @@ function getAttendenceEval($event_id = null) {
                         array_push($event_arr, $att_item);
                     } else {
                         $ev = array(
+                            "Event_ID" => $curr_event_id,
                             "Type" => $type,
                             "Location" => $location,
                             "Date" => $date,
@@ -187,6 +188,9 @@ function getAttendenceEval($event_id = null) {
                 );
                 array_push($attendence_arr, $ev);
 
+                // check if there are any events following a practice event
+                $attendence_arr = calcNextEvent($attendence_arr);
+
                 response_with_data(200, $attendence_arr);
             } else {
                 http_response_code(204);
@@ -194,6 +198,39 @@ function getAttendenceEval($event_id = null) {
             exit();
         }
     }
+}
+
+function calcNextEvent($predictions) {
+
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    for($i = 0; $i < count($predictions); $i++){
+        if($predictions[$i]['Category'] != 'practice'){
+            $predictions[$i]['NextEvent'] = -1;
+            continue;
+        }
+
+        $next_event = -1;
+
+        $date = $predictions[$i]['Date'];
+
+        $query = "SELECT event_id, date FROM tblEvents WHERE usergroup_id=:usergroup_id AND date > :date AND category='event' AND state = 1 ORDER BY date LIMIT 1";
+        $statement = $db_conn->prepare($query);
+        $statement->bindParam(':usergroup_id', $_GET['usergroup_id']);
+        $statement->bindParam(':date', $date);
+        if($statement->execute()){
+            if($row = $statement->fetch(PDO::FETCH_ASSOC)){
+                // calculate the difference in days
+                $diff_days = (strtotime($row['date']) - strtotime($date)) / (60 * 60 * 24);
+                $next_event = intdiv($diff_days, 7);
+            }
+        }
+
+        $predictions[$i]['NextEvent'] = $next_event;
+    }
+
+    return $predictions;
 }
 
 ?>
