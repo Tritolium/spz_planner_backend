@@ -29,6 +29,9 @@ switch ($request) {
     case 'attendenceeval':
         require __DIR__ . '/attendenceeval.php';
         break;
+    case 'calendar':
+        require __DIR__ . '/calendar.php';
+        break;
     case 'error':
         require __DIR__ . '/error.php';
         break;
