@@ -32,27 +32,57 @@ $query = "SELECT events.event_id, state, type, location, address, date, begin, d
             LEFT JOIN tblUsergroups t5
             ON events.usergroup_id = t5.usergroup_id
             WHERE date >= curdate()
-            AND attendence != 0 
+            AND (attendence != 0 
+            OR attendence IS NULL)
             ORDER BY date, begin";
 $statement = $db_conn->prepare($query);
 $statement->bindParam(":api_token", $_GET['api_token']);
 
 if ($statement->execute()) {
+    $tzBerlin = new DateTimeZone('Europe/Berlin');
+    $tzUTC = new DateTimeZone('UTC');
+
     $events = $statement->fetchAll(PDO::FETCH_ASSOC);
     $calendar = "BEGIN:VCALENDAR\n";
     $calendar .= "VERSION:2.0\n";
-    $calendar .= "PRODID:SPZ Roenkhausen\n";
+    $calendar .= "PRODID:-//SPZ Roenkhausen//NONSGML v1.0//DE\n";
+    $calendar .= "BEGIN:VTIMEZONE\n";
+    $calendar .= "TZID:Europe/Berlin\n";
+    $calendar .= "BEGIN:DAYLIGHT\n";
+    $calendar .= "TZOFFSETFROM:+0100\n";
+    $calendar .= "TZOFFSETTO:+0200\n";
+    $calendar .= "TZNAME:CEST\n";
+    $calendar .= "DTSTART:19700329T020000\n";
+    $calendar .= "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU\n";
+    $calendar .= "END:DAYLIGHT\n";
+    $calendar .= "BEGIN:STANDARD\n";
+    $calendar .= "TZOFFSETFROM:+0200\n";
+    $calendar .= "TZOFFSETTO:+0100\n";
+    $calendar .= "TZNAME:CET\n";
+    $calendar .= "DTSTART:19701025T030000\n";
+    $calendar .= "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU\n";
+    $calendar .= "END:STANDARD\n";
+    $calendar .= "END:VTIMEZONE\n";
 
     foreach ($events as $event) {
         $date = date('Ymd', strtotime($event['date']));
         $begin = $event['departure'] ? date('His', strtotime($event['departure'])) : ($event['begin'] ? date('His', strtotime($event['begin'])) : '120000');
-        $end = $event['end'] ? date('His', strtotime($event['departures'])) : date('His', strtotime($event['begin'] . ' + 2 hours'));
+        $end = $event['leave_dep'] ? date('His', strtotime($event['leave_dep'])) : date('His', strtotime($begin . ' + 2 hours'));
         $summary = $event['type'] . ' ' . $event['location'];
         $location = $event['address'] ? $event['address'] : $event['location'];
+
+        $start = new DateTime($date . 'T' . $begin, $tzBerlin);
+        $start->setTimezone($tzUTC);
+        $begin = $start->format('Ymd\THis\Z');
+
+        $end = new DateTime($date . 'T' . $end, $tzBerlin);
+        $end->setTimezone($tzUTC);
+        $end = $end->format('Ymd\THis\Z');
         
         $calendar .= "BEGIN:VEVENT\n";
-        $calendar .= "DTSTART:" . $date . "T" . $begin . "\n";
-        $calendar .= "DTEND:" . $date . "T" . $end . "\n";
+        $calendar .= "UID:" . $event['event_id'] . "@spz-roenkhausen.de\n";
+        $calendar .= "DTSTART:" . $begin . "\n";
+        $calendar .= "DTEND:" . $end . "\n";
         $calendar .= "SUMMARY:" . $summary . "\n";
         $calendar .= "DESCRIPTION:\n";
         $calendar .= "LOCATION:" . $location . "\n";
