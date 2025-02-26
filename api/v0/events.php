@@ -94,6 +94,7 @@ function getEvents($id = null) {
                 "State" => $state,
                 "Date" => $date,
                 "Begin" => ($begin == "12:34:56") ? null : $begin,
+                "End" => $end,
                 "Departure" => ($departure == "12:34:56") ? null : $departure,
                 "Leave_dep" => ($leave_dep == "12:34:56") ? null : $leave_dep,
                 "Accepted" => boolval($accepted), // TODO: remove when no user uses v0.15 anymore
@@ -177,6 +178,7 @@ function getEvents($id = null) {
                 "State" => $state,
                 "Date" => $date,
                 "Begin" => ($begin == "12:34:56") ? null : $begin,
+                "End" => $end,
                 "Departure" => ($departure == "12:34:56") ? null : $departure,
                 "Leave_dep" => ($leave_dep == "12:34:56") ? null : $leave_dep,
                 "Accepted" => boolval($accepted), // TODO: remove when no user uses v0.15 anymore
@@ -298,7 +300,7 @@ function updateEvent($id) {
 
     $data = json_decode(file_get_contents("php://input"));
 
-    $query = "UPDATE tblEvents SET type = :type, location = :location, address = :address, category = :category, state = :state, date = :date, begin = :begin, departure = :departure, leave_dep = :leave_dep, accepted = :accepted, plusone = :plusone, clothing = :clothing, usergroup_id = :usergroup_id, fixed = :fixed, push = :push WHERE event_id = :event_id";
+    $query = "UPDATE tblEvents SET type = :type, location = :location, address = :address, category = :category, state = :state, date = :date, begin = :begin, end=:end, departure = :departure, leave_dep = :leave_dep, accepted = :accepted, plusone = :plusone, clothing = :clothing, usergroup_id = :usergroup_id, fixed = :fixed, push = :push WHERE event_id = :event_id";
     $statement = $db_conn->prepare($query);
 
     $statement->bindParam(":type", $data->Type);
@@ -308,6 +310,7 @@ function updateEvent($id) {
     $statement->bindValue(":state", isset($data->State) ? $data->State : 1); // TODO: remove isset check when no user uses v0.15 anymore
     $statement->bindParam(":date", $data->Date);
     $statement->bindParam(":begin", $data->Begin);
+    $statement->bindValue(":end", isset($data->End) ? $data->End : null); // TODO: remove isset check when no user uses v0.17 anymore
     $statement->bindParam(":departure", $data->Departure);
     $statement->bindParam(":leave_dep", $data->Leave_dep);
     $statement->bindValue(":accepted", isset($data->Accepted) ? $data->Accepted ? 1 : 0 : 1); // TODO: remove line when no user uses v0.15 anymore
@@ -332,7 +335,7 @@ function createEvent() {
 
     $data = json_decode(file_get_contents("php://input"));
 
-    $query = "INSERT INTO tblEvents (type, location, address, category, state, date, begin, departure, leave_dep, accepted, plusone, clothing, usergroup_id, fixed, push) VALUES (:type, :location, :address, :category, :state, :date, :begin, :departure, :leave_dep, :accepted, :plusone, :clothing, :usergroup_id, :fixed, :push); SELECT LAST_INSERT_ID()";
+    $query = "INSERT INTO tblEvents (type, location, address, category, state, date, begin, end, departure, leave_dep, accepted, plusone, clothing, usergroup_id, fixed, push) VALUES (:type, :location, :address, :category, :state, :date, :begin, :end, :departure, :leave_dep, :accepted, :plusone, :clothing, :usergroup_id, :fixed, :push); SELECT LAST_INSERT_ID()";
     $statement = $db_conn->prepare($query);
 
     $statement->bindParam(":type", $data->Type);
@@ -342,6 +345,7 @@ function createEvent() {
     $statement->bindValue(":state", isset($data->State) ? $data->State : 1); // TODO: remove isset check when no user uses v0.15 anymore
     $statement->bindParam(":date", $data->Date);
     $statement->bindParam(":begin", $data->Begin);
+    $statement->bindValue(":end", isset($data->End) ? $data->End : null); // TODO: remove isset check when no user uses v0.17 anymore
     $statement->bindParam(":departure", $data->Departure);
     $statement->bindParam(":leave_dep", $data->Leave_dep);
     $statement->bindValue(":accepted", isset($data->Accepted) ? $data->Accepted ? 1 : 0 : 1); // TODO: remove line when no user uses v0.15 anymore
