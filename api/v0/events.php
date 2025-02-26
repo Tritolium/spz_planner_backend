@@ -307,7 +307,7 @@ function updateEvent($id) {
     $statement->bindParam(":location", $data->Location);
     $statement->bindParam(":address", $data->Address);
     $statement->bindParam(":category", $data->Category);
-    $statement->bindValue(":state", isset($data->State) ? $data->State : 1); // TODO: remove isset check when no user uses v0.15 anymore
+    $statement->bindParam(":state", $data->State);
     $statement->bindParam(":date", $data->Date);
     $statement->bindParam(":begin", $data->Begin);
     $statement->bindValue(":end", isset($data->End) ? $data->End : null); // TODO: remove isset check when no user uses v0.17 anymore
@@ -342,7 +342,7 @@ function createEvent() {
     $statement->bindParam(":location", $data->Location);
     $statement->bindParam(":address", $data->Address);
     $statement->bindParam(":category", $data->Category);
-    $statement->bindValue(":state", isset($data->State) ? $data->State : 1); // TODO: remove isset check when no user uses v0.15 anymore
+    $statement->bindParam(":state", $data->State);
     $statement->bindParam(":date", $data->Date);
     $statement->bindParam(":begin", $data->Begin);
     $statement->bindValue(":end", isset($data->End) ? $data->End : null); // TODO: remove isset check when no user uses v0.17 anymore
