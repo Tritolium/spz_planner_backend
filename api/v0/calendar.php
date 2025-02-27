@@ -19,7 +19,7 @@ if (!isset($_GET['api_token'])) {
 $database = new Database();
 $db_conn = $database->getConnection();
 
-$query = "SELECT events.event_id, state, type, location, address, date, begin, departure, leave_dep, attendence FROM (SELECT event_id, category, state, t4.member_id, type, location, address, date, plusone as ev_plusone, begin, departure, leave_dep, t2.usergroup_id, clothing FROM tblEvents t 
+$query = "SELECT events.event_id, state, type, location, address, date, begin, end, departure, leave_dep, attendence FROM (SELECT event_id, category, state, t4.member_id, type, location, address, date, plusone as ev_plusone, begin, end, departure, leave_dep, t2.usergroup_id, clothing FROM tblEvents t 
             LEFT JOIN tblUsergroupAssignments t2 
             ON t.usergroup_id = t2.usergroup_id
             LEFT JOIN tblMembers t4 
@@ -67,7 +67,24 @@ if ($statement->execute()) {
     foreach ($events as $event) {
         $date = date('Ymd', strtotime($event['date']));
         $begin = $event['departure'] ? date('His', strtotime($event['departure'])) : ($event['begin'] ? date('His', strtotime($event['begin'])) : '120000');
-        $end = $event['leave_dep'] ? date('His', strtotime($event['leave_dep'])) : date('His', strtotime($begin . ' + 2 hours'));
+        // check if leave_dep and or end are set
+        if ($event['leave_dep']) {
+            // if leave_dep is earlier than begin, add 1 day
+            if (strtotime($event['leave_dep']) < strtotime($begin)) {
+                $date_end = date('Ymd', strtotime($event['date'] . ' + 1 day'));
+                $end = new DateTime($date_end . 'T' . date('His', strtotime($event['leave_dep'])), $tzBerlin);
+            } else {
+                $end = new DateTime($date . 'T' . date('His', strtotime($event['leave_dep'])), $tzBerlin);
+            }
+        } else if ($event['end']) {
+            $end_time = date('His', strtotime($event['end']));
+            $end_date = date('Ymd', strtotime($event['end']));
+            $end = new DateTime($end_date . 'T' . $end_time, $tzBerlin);
+        } else {
+            $end = date('His', strtotime($begin . ' + 2 hours'));
+            $end = new DateTime($date . 'T' . $end, $tzBerlin);
+        }
+
         $summary = $event['type'] . ' ' . $event['location'];
         $location = $event['address'] ? $event['address'] : $event['location'];
 
@@ -75,7 +92,6 @@ if ($statement->execute()) {
         $start->setTimezone($tzUTC);
         $begin = $start->format('Ymd\THis\Z');
 
-        $end = new DateTime($date . 'T' . $end, $tzBerlin);
         $end->setTimezone($tzUTC);
         $end = $end->format('Ymd\THis\Z');
         
