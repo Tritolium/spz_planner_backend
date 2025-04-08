@@ -1,6 +1,9 @@
 RewriteEngine On
 RewriteBase /api/v0/
-RewriteRule ^index\\.php$ - [L]
+
+RewriteCond %{HTTP:If-None-Match} ^(.+)$
+RewriteRule ^ - [E=HTTP_IF_NONE_MATCH:%1]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /api/v0/index.php [L]
