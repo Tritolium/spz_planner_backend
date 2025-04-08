@@ -130,6 +130,17 @@ function response($code, $response)
  */
 function response_with_data($code, $data)
 {
+    $etag = '"' . md5(json_encode($data)) . '"';
+
+    if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] === $etag) {
+        header('ETag: ' . $etag);
+        header('Content-Length: 0');
+        http_response_code(304);
+        error_log("304 Not Modified: " . json_encode($data));
+        exit();
+    }
+
+    header('ETag: ' . $etag);
     header('Content-Type: application/json');
     http_response_code($code);
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
