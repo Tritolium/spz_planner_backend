@@ -157,5 +157,7 @@ function getEntries($api_token, $event_id)
     }
 
     response_with_data(200, $entries);
+
+    return true;
 }
 ?>
