@@ -43,26 +43,26 @@ if ($statement->execute()) {
     $tzUTC = new DateTimeZone('UTC');
 
     $events = $statement->fetchAll(PDO::FETCH_ASSOC);
-    $calendar = "BEGIN:VCALENDAR\n";
-    $calendar .= "VERSION:2.0\n";
-    $calendar .= "PRODID:-//SPZ Roenkhausen//NONSGML v1.0//DE\n";
-    $calendar .= "BEGIN:VTIMEZONE\n";
-    $calendar .= "TZID:Europe/Berlin\n";
-    $calendar .= "BEGIN:DAYLIGHT\n";
-    $calendar .= "TZOFFSETFROM:+0100\n";
-    $calendar .= "TZOFFSETTO:+0200\n";
-    $calendar .= "TZNAME:CEST\n";
-    $calendar .= "DTSTART:19700329T020000\n";
-    $calendar .= "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU\n";
-    $calendar .= "END:DAYLIGHT\n";
-    $calendar .= "BEGIN:STANDARD\n";
-    $calendar .= "TZOFFSETFROM:+0200\n";
-    $calendar .= "TZOFFSETTO:+0100\n";
-    $calendar .= "TZNAME:CET\n";
-    $calendar .= "DTSTART:19701025T030000\n";
-    $calendar .= "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU\n";
-    $calendar .= "END:STANDARD\n";
-    $calendar .= "END:VTIMEZONE\n";
+    $calendar = "BEGIN:VCALENDAR\r\n";
+    $calendar .= "VERSION:2.0\r\n";
+    $calendar .= "PRODID:-//SPZ Roenkhausen//NONSGML v1.0//DE\r\n";
+    $calendar .= "BEGIN:VTIMEZONE\r\n";
+    $calendar .= "TZID:Europe/Berlin\r\n";
+    $calendar .= "BEGIN:DAYLIGHT\r\n";
+    $calendar .= "TZOFFSETFROM:+0100\r\n";
+    $calendar .= "TZOFFSETTO:+0200\r\n";
+    $calendar .= "TZNAME:CEST\r\n";
+    $calendar .= "DTSTART:19700329T020000\r\n";
+    $calendar .= "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU\r\n";
+    $calendar .= "END:DAYLIGHT\r\n";
+    $calendar .= "BEGIN:STANDARD\r\n";
+    $calendar .= "TZOFFSETFROM:+0200\r\n";
+    $calendar .= "TZOFFSETTO:+0100\r\n";
+    $calendar .= "TZNAME:CET\r\n";
+    $calendar .= "DTSTART:19701025T030000\r\n";
+    $calendar .= "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU\r\n";
+    $calendar .= "END:STANDARD\r\n";
+    $calendar .= "END:VTIMEZONE\r\n";
 
     foreach ($events as $event) {
         $date = date('Ymd', strtotime($event['date']));
@@ -95,17 +95,17 @@ if ($statement->execute()) {
         $end->setTimezone($tzUTC);
         $end = $end->format('Ymd\THis\Z');
         
-        $calendar .= "BEGIN:VEVENT\n";
-        $calendar .= "UID:" . $event['event_id'] . "@spz-roenkhausen.de\n";
-        $calendar .= "DTSTART:" . $begin . "\n";
-        $calendar .= "DTEND:" . $end . "\n";
-        $calendar .= "SUMMARY:" . $summary . "\n";
-        $calendar .= "DESCRIPTION:\n";
-        $calendar .= "LOCATION:" . $location . "\n";
-        $calendar .= "END:VEVENT\n";
+        $calendar .= "BEGIN:VEVENT\r\n";
+        $calendar .= "UID:" . $event['event_id'] . "@spz-roenkhausen.de\r\n";
+        $calendar .= "DTSTART:" . $begin . "\r\n";
+        $calendar .= "DTEND:" . $end . "\r\n";
+        $calendar .= "SUMMARY:" . $summary . "\r\n";
+        $calendar .= "DESCRIPTION:\r\n";
+        $calendar .= "LOCATION:" . $location . "\r\n";
+        $calendar .= "END:VEVENT\r\n";
     }
 
-    $calendar .= "END:VCALENDAR";
+    $calendar .= "END:VCALENDAR\r\n";
     echo $calendar;
 } else {
     http_response_code(500);
