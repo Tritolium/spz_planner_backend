@@ -78,7 +78,7 @@ function getAttendenceEval($event_id = null) {
         while($row = $statement->fetch(PDO::FETCH_ASSOC)){
             extract($row);
 
-            [$_att, $_miss, $_sign] = predictAttendencePerMember($member_id, $event_id);
+            [$_att, $_miss, $_sign, $_miss_with_attendence] = predictAttendencePerMember($member_id, $event_id);
 
             $prediction = 0*$_att + 1*$_miss + 2*$_sign;
 
