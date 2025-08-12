@@ -209,7 +209,7 @@ function getNextEvents() {
         AND state != 2
         AND category = :category
         AND evaluated = 0
-        ORDER BY date ASC";
+        ORDER BY date, begin ASC";
 
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":api_token", $_GET['api_token']);
