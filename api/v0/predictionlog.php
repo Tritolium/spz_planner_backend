@@ -36,7 +36,7 @@ function predictAttendence($event_id) {
 
     // iterate over members
     foreach ($members as $member_id) {
-        [$_att, $_miss, $_sign] = predictAttendencePerMember($member_id, $event_id);
+        [$_att, $_miss, $_sign, $_miss_with_attendence] = predictAttendencePerMember($member_id, $event_id);
         $prob_attending += $_att;
         $prob_missing += $_miss;
         $prob_signout += $_sign;
@@ -79,16 +79,21 @@ function predictAttendencePerMember($member_id, $event_id) {
     $okay = 0;
     $not_okay = 0;
     $signout = 0;
+    $missing_with_attendence = 0;
 
     $prob_attending = 0;
     $prob_missing = 0;
     $prob_signout = 0;
+    $prob_missing_with_attendence = 0;
 
     while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
         switch ($row['evaluation']) {
         case 0:
+            $not_okay += intval($row['COUNT(*)']);
+            break;
         case 1:
             $not_okay += intval($row['COUNT(*)']);
+            $missing_with_attendence += intval($row['COUNT(*)']);
             break;
         case 2:
             $signout += intval($row['COUNT(*)']);
@@ -102,18 +107,23 @@ function predictAttendencePerMember($member_id, $event_id) {
     if ($okay + $not_okay + $signout == 0) {
         // no evaluated attendences
         $prob_missing += 1;
-        return [$prob_attending, $prob_missing, $prob_signout];
+        return [$prob_attending, $prob_missing, $prob_signout, $prob_missing_with_attendence];
     }
 
     if ($signout / ($okay + $not_okay + $signout) >= 0.9) {
-        $prob_signout += 1;
+        $prob_signout = 1;
     } else if ($not_okay / ($not_okay + $okay + $signout) >= 0.1) {
-        $prob_missing += 1;
+        $prob_missing = 1;
     } else {
-        $prob_attending += 1;
+        $prob_attending = 1;
     }
 
-    return [$prob_attending, $prob_missing, $prob_signout];
+    // in case the member missed an event but said they would attend
+    if ($missing_with_attendence > 0) {
+        $prob_missing_with_attendence = 1;
+    }
+
+    return [$prob_attending, $prob_missing, $prob_signout, $prob_missing_with_attendence];
 }
 
 ?>
