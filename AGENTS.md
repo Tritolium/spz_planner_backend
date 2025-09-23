@@ -102,7 +102,7 @@ CREATE TABLE `tblAttendence` (
 --
 
 CREATE TABLE `tblAttendenceHistory` (
-  `history_id` int(11) NOT NULL,
+  `history_id` int(11) NOT NULL AUTO_INCREMENT,
   `member_id` int(11) NOT NULL,
   `event_id` int(11) NOT NULL,
   `previous_attendence` int(11) DEFAULT NULL,

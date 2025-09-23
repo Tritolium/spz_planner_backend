@@ -6,7 +6,7 @@ Die Tabelle `tblAttendenceHistory` speichert jede inhaltliche Änderung der Anwe
 
 | Spalte                | Typ         | Beschreibung |
 | --------------------- | ----------- | ------------ |
-| `history_id`          | INT, PK     | Laufender Primärschlüssel.
+| `history_id`          | INT, PK     | Laufender Primärschlüssel (AUTO_INCREMENT).
 | `member_id`           | INT, FK     | Referenz auf das Mitglied, dessen Status sich geändert hat.
 | `event_id`            | INT, FK     | Referenz auf die betroffene Veranstaltung.
 | `previous_attendence` | INT, NULL   | Vorheriger Status (`NULL` bei erstmaligem Eintrag).
