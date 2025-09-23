@@ -303,7 +303,7 @@ function getAttendence($event_id = null) {
                     extract($row);
                     $curr_event_id = intval($event_id);
                     $event_arr = array();
-                    [$_att, $_miss, $_sign] = predictAttendencePerMember($member_id, $event_id);
+                    [$_att, $_miss, $_sign, $_miss_with_attendence] = predictAttendencePerMember($member_id, $event_id);
                     $prediction = 0*$_att + 1*$_miss + 2*$_sign;
                     $att_item = array(
                         "Member_ID" => $member_id,
@@ -311,13 +311,14 @@ function getAttendence($event_id = null) {
                         "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
                         "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone),
                         "Prediction" => $prediction,
-                        "Instrument" => $instruments[$member_id]
+                        "Instrument" => $instruments[$member_id],
+                        "Credible" => $_miss_with_attendence ? false : true
                     );
                     array_push($event_arr, $att_item);
                     while($row = $statement->fetch(PDO::FETCH_ASSOC)){
                         if($curr_event_id == $row['event_id']){
                             extract($row);
-                            [$_att, $_miss, $_sign] = predictAttendencePerMember($member_id, $event_id);
+                            [$_att, $_miss, $_sign, $_miss_with_attendence] = predictAttendencePerMember($member_id, $event_id);
                             $prediction = 0*$_att + 1*$_miss + 2*$_sign;
                             $att_item = array(
                                 "Member_ID" => $member_id,
@@ -325,7 +326,8 @@ function getAttendence($event_id = null) {
                                 "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
                                 "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone),
                                 "Prediction" => $prediction,
-                                "Instrument" => $instruments[$member_id]
+                                "Instrument" => $instruments[$member_id],
+                                "Credible" => $_miss_with_attendence ? false : true
                             );
                             array_push($event_arr, $att_item);
                         } else {
@@ -341,7 +343,7 @@ function getAttendence($event_id = null) {
                             extract($row);
                             $curr_event_id = $event_id;
                             $event_arr = array();
-                            [$_att, $_miss, $_sign] = predictAttendencePerMember($member_id, $event_id);
+                            [$_att, $_miss, $_sign, $_miss_with_attendence] = predictAttendencePerMember($member_id, $event_id);
                             $prediction = 0*$_att + 1*$_miss + 2*$_sign;
                             $att_item = array(
                                 "Member_ID" => $member_id,
@@ -349,7 +351,8 @@ function getAttendence($event_id = null) {
                                 "Attendence" => (is_null($attendence)) ? -1 : intval($attendence),
                                 "PlusOne" => (is_null($plusone)) ? 0 : intval($plusone),
                                 "Prediction" => $prediction,
-                                "Instrument" => $instruments[$member_id]
+                                "Instrument" => $instruments[$member_id],
+                                "Credible" => $_miss_with_attendence ? false : true
                             );
                             array_push($event_arr, $att_item);
                         }
