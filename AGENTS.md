@@ -98,6 +98,22 @@ CREATE TABLE `tblAttendence` (
 -- --------------------------------------------------------
 
 --
+-- Tabellenstruktur für Tabelle `tblAttendenceHistory`
+--
+
+CREATE TABLE `tblAttendenceHistory` (
+  `history_id` int(11) NOT NULL,
+  `member_id` int(11) NOT NULL,
+  `event_id` int(11) NOT NULL,
+  `previous_attendence` int(11) DEFAULT NULL,
+  `new_attendence` int(11) NOT NULL,
+  `changed_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `changed_by` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Tabellenstruktur für Tabelle `tblAuth`
 --
 
@@ -416,6 +432,15 @@ ALTER TABLE `tblAttendence`
   ADD UNIQUE KEY `member_id` (`member_id`,`event_id`);
 
 --
+-- Indizes für die Tabelle `tblAttendenceHistory`
+--
+ALTER TABLE `tblAttendenceHistory`
+  ADD PRIMARY KEY (`history_id`),
+  ADD KEY `member_id` (`member_id`),
+  ADD KEY `event_id` (`event_id`),
+  ADD KEY `changed_by` (`changed_by`);
+
+--
 -- Indizes für die Tabelle `tblAuth`
 --
 ALTER TABLE `tblAuth`
@@ -554,6 +579,12 @@ ALTER TABLE `tblAnalytics`
   MODIFY `analytic_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT für Tabelle `tblAttendenceHistory`
+--
+ALTER TABLE `tblAttendenceHistory`
+  MODIFY `history_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT für Tabelle `tblAssociations`
 --
 ALTER TABLE `tblAssociations`
@@ -670,6 +701,14 @@ ALTER TABLE `tblAttendence`
   ADD CONSTRAINT `tblAttendence_ibfk_2` FOREIGN KEY (`event_id`) REFERENCES `tblEvents` (`event_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 --
+-- Constraints der Tabelle `tblAttendenceHistory`
+--
+ALTER TABLE `tblAttendenceHistory`
+  ADD CONSTRAINT `tblAttendenceHistory_changed_by` FOREIGN KEY (`changed_by`) REFERENCES `tblMembers` (`member_id`) ON DELETE SET NULL ON UPDATE NO ACTION,
+  ADD CONSTRAINT `tblAttendenceHistory_event` FOREIGN KEY (`event_id`) REFERENCES `tblEvents` (`event_id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  ADD CONSTRAINT `tblAttendenceHistory_member` FOREIGN KEY (`member_id`) REFERENCES `tblMembers` (`member_id`) ON DELETE CASCADE ON UPDATE NO ACTION;
+
+--
 -- Constraints der Tabelle `tblDatetemplates`
 --
 ALTER TABLE `tblDatetemplates`
@@ -733,6 +772,33 @@ ALTER TABLE `tblUserRoles`
   ADD CONSTRAINT `tblUserRoles_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `tblMembers` (`member_id`),
   ADD CONSTRAINT `tblUserRoles_ibfk_2` FOREIGN KEY (`role_id`) REFERENCES `tblRoles` (`role_id`),
   ADD CONSTRAINT `tblUserRoles_ibfk_3` FOREIGN KEY (`association_id`) REFERENCES `tblAssociations` (`association_id`);
+
+-- --------------------------------------------------------
+
+--
+-- Trigger `tblAttendence` für Historisierung
+--
+
+DELIMITER $$
+CREATE TRIGGER `trg_tblAttendence_after_insert` AFTER INSERT ON `tblAttendence`
+FOR EACH ROW
+BEGIN
+  INSERT INTO `tblAttendenceHistory` (member_id, event_id, previous_attendence, new_attendence)
+  VALUES (NEW.member_id, NEW.event_id, NULL, NEW.attendence);
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER `trg_tblAttendence_after_update` AFTER UPDATE ON `tblAttendence`
+FOR EACH ROW
+BEGIN
+  IF OLD.attendence <> NEW.attendence THEN
+    INSERT INTO `tblAttendenceHistory` (member_id, event_id, previous_attendence, new_attendence)
+    VALUES (NEW.member_id, NEW.event_id, OLD.attendence, NEW.attendence);
+  END IF;
+END$$
+DELIMITER ;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -316,7 +316,7 @@ function updateAttendence($api_token, $changes)
         extract($row);
         foreach($changes as $event_id => $attendence){
             print_r($attendence);
-            updateSingleAttendence($member_id, $event_id, $attendence);
+            updateSingleAttendence($member_id, $event_id, $attendence, $member_id);
         }
         http_response_code(200);
     } else {
@@ -325,16 +325,21 @@ function updateAttendence($api_token, $changes)
     }
 }
 
-function updateSingleAttendence($member_id, $event_id, $attendence)
+function updateSingleAttendence($member_id, $event_id, $attendence, $changed_by = null)
 {
     $database = new Database();
     $db_conn = $database->getConnection();
-    $query = "SELECT * FROM tblAttendence WHERE member_id=:member_id AND event_id=:event_id";
+    $query = "SELECT attendence FROM tblAttendence WHERE member_id=:member_id AND event_id=:event_id";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":member_id", $member_id);
     $statement->bindParam(":event_id", $event_id);
     $statement->execute();
-    if($statement->rowCount() < 1){
+    $existing_row = $statement->fetch(PDO::FETCH_ASSOC);
+    $previous_attendence = ($existing_row === false || !isset($existing_row['attendence']))
+        ? null
+        : intval($existing_row['attendence']);
+
+    if($existing_row === false){
         $query = "INSERT INTO tblAttendence (attendence, member_id, event_id) VALUES (:attendence, :member_id, :event_id)";
         $statement = $db_conn->prepare($query);
         $statement->bindParam(":attendence", $attendence[0]);
@@ -348,8 +353,28 @@ function updateSingleAttendence($member_id, $event_id, $attendence)
         $statement->bindParam(":member_id", $member_id);
         $statement->bindParam(":event_id", $event_id);
     }
-    
+
     $statement->execute();
+
+    $new_attendence = intval($attendence[0]);
+    if($existing_row === false || $previous_attendence !== $new_attendence){
+        $history_query = "INSERT INTO tblAttendenceHistory (member_id, event_id, previous_attendence, new_attendence, changed_by) VALUES (:member_id, :event_id, :previous_attendence, :new_attendence, :changed_by)";
+        $history_statement = $db_conn->prepare($history_query);
+        $history_statement->bindParam(":member_id", $member_id, PDO::PARAM_INT);
+        $history_statement->bindParam(":event_id", $event_id, PDO::PARAM_INT);
+        if(is_null($previous_attendence)){
+            $history_statement->bindValue(":previous_attendence", null, PDO::PARAM_NULL);
+        } else {
+            $history_statement->bindValue(":previous_attendence", $previous_attendence, PDO::PARAM_INT);
+        }
+        $history_statement->bindValue(":new_attendence", $new_attendence, PDO::PARAM_INT);
+        if(is_null($changed_by)){
+            $history_statement->bindValue(":changed_by", null, PDO::PARAM_NULL);
+        } else {
+            $history_statement->bindValue(":changed_by", $changed_by, PDO::PARAM_INT);
+        }
+        $history_statement->execute();
+    }
 
     if($attendence[0] == 0) {
         $query = "SELECT * FROM tblEvents WHERE event_id=:event_id AND date=curdate()";
