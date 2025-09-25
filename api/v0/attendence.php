@@ -412,6 +412,17 @@ function updateAttendence($event_id) {
         }
     }
 
+    $query = "SELECT attendence FROM tblAttendence WHERE event_id=:event_id AND member_id=:member_id";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
+    $statement->bindParam(":member_id", $data->Member_ID);
+    $statement->execute();
+    if ($statement->rowCount() == 1) {
+        $old_attendence = $statement->fetch(PDO::FETCH_ASSOC)['attendence'];
+    } else {
+        $old_attendence = -1;
+    }
+
     $query = "INSERT INTO tblAttendence (event_id, member_id, attendence, plusone) VALUES (:event_id, :member_id, :attendence, :plusone) ON DUPLICATE KEY UPDATE attendence=:attendence, plusone=:plusone";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":event_id", $event_id);
@@ -419,7 +430,15 @@ function updateAttendence($event_id) {
     $statement->bindParam(":attendence", $data->Attendence);
     $statement->bindValue(":plusone", $data->PlusOne ? 1 : 0);
 
+    $query = "INSERT INTO tblAttendenceHistory (member_id, event_id, previous_attendence, new_attendence, changed_at) VALUES (:member_id, :event_id, :previous_attendence, :new_attendence, NOW())";
+    $statement_history = $db_conn->prepare($query);
+    $statement_history->bindParam(":member_id", $data->Member_ID);
+    $statement_history->bindParam(":event_id", $event_id);
+    $statement_history->bindParam(":previous_attendence", $old_attendence);
+    $statement_history->bindParam(":new_attendence", $data->Attendence);
+
     if ($statement->execute()) {
+        $statement_history->execute();
         http_response_code(200);
     } else {
         http_response_code(500);
