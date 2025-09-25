@@ -106,6 +106,7 @@ function getAttendence($event_id = null) {
         $consent = 0;
         $refusal = 0;
         $maybe = 0;
+        $delayed = 0;
         $missing = 0;
         $plusone = 0;
         $prob_attending = 0;
@@ -129,6 +130,9 @@ function getAttendence($event_id = null) {
                 case 2:
                     $maybe += intval($row['COUNT(*)']);
                     break;
+                case 3:
+                    $delayed += intval($row['COUNT(*)']);
+                    break;
             }
         }
 
@@ -139,6 +143,7 @@ function getAttendence($event_id = null) {
             "Consent" => $consent,
             "Refusal" => $refusal,
             "Maybe" => $maybe,
+            "Delayed" => $delayed,
             "Missing" => $missing,
             "ProbAttending" => $prob_attending,
             "ProbMissing" => $prob_missing,
