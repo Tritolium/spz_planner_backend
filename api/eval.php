@@ -63,6 +63,7 @@ function getEventEvalByUsergroup($usergroup_id)
         $consent = getEventConsentCount($event_item[0], $usergroup_id);
         $refusal = getEventRefusalCount($event_item[0], $usergroup_id);
         $maybe = getEventMaybeCount($event_item[0], $usergroup_id);
+        $delayed = getEventDelayedCount($event_item[0], $usergroup_id);
         $missing = getEventMissingCount($event_item[0], $usergroup_id);
         $plusone = getEventPlusOneCount($event_item[0], $usergroup_id);
         [$prob_attending, $prob_missing, $prob_signout] = predictAttendence($event_item[0]);
@@ -77,6 +78,7 @@ function getEventEvalByUsergroup($usergroup_id)
             "Consent"  => $consent,
             "Refusal"  => $refusal,
             "Maybe"    => $maybe,
+            "Delayed"  => $delayed,
             "Missing"  => $missing,
             "ProbAttending" => $prob_attending,
             "ProbMissing" => $prob_missing,
@@ -96,6 +98,7 @@ function getEventEvalById($event_id, $usergroup_id)
     $consent = getEventConsentCount($event_id, $usergroup_id);
     $refusal = getEventRefusalCount($event_id, $usergroup_id);
     $maybe = getEventMaybeCount($event_id, $usergroup_id);
+    $delayed = getEventDelayedCount($event_id, $usergroup_id);
     $missing = getEventMissingCount($event_id, $usergroup_id);
     $plusone = getEventPlusOneCount($event_id, $usergroup_id);
 
@@ -104,6 +107,7 @@ function getEventEvalById($event_id, $usergroup_id)
         "Consent"  => $consent,
         "Refusal"  => $refusal,
         "Maybe"    => $maybe,
+        "Delayed"  => $delayed,
         "Missing"  => $missing,
         "PlusOne"  => intval($plusone)
     );
@@ -180,7 +184,30 @@ function getEventMaybeCount($event_id, $usergroup_id)
     return $row["maybe"];
 }
 
-function getEventmissingCount($event_id, $usergroup_id)
+function getEventDelayedCount($event_id, $usergroup_id)
+{
+    $database = new Database();
+    $db_conn = $database->getConnection();
+
+    $query = "SELECT COUNT(attendence) AS _delayed 
+    FROM (SELECT tm.member_id FROM tblMembers tm 
+    left join tblUsergroupAssignments tua 
+    on tm.member_id = tua.member_id 
+    where tua.usergroup_id = :usergroup_id) as users
+    LEFT JOIN
+    (SELECT * FROM tblAttendence WHERE event_id=:event_id) AS a
+    ON users.member_id=a.member_id 
+    WHERE attendence=3";
+
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":usergroup_id", $usergroup_id);
+    $statement->bindParam(":event_id", $event_id);
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    return $row["_delayed"];
+}
+
+function getEventMissingCount($event_id, $usergroup_id)
 {
     $database = new Database();
     $db_conn = $database->getConnection();
