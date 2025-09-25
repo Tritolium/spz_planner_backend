@@ -16,14 +16,14 @@ Die Tabelle `tblAttendenceHistory` speichert jede inhaltliche Änderung der Anwe
 
 Die Foreign-Keys stellen sicher, dass Historieneinträge nur für vorhandene Mitglieder und Veranstaltungen existieren. Historische Einträge werden beim Löschen der zugehörigen Mitglieder oder Events automatisch entfernt (`ON DELETE CASCADE`). Der optionale Verweis `changed_by` wird bei nicht mehr existierenden auslösenden Mitgliedern automatisch auf `NULL` gesetzt.
 
-## Automatisierte Befüllung über Trigger
+## Automatisierte Befüllung
 
-Zwei Datenbank-Trigger sorgen dafür, dass jede Einfügung oder Aktualisierung von Datensätzen in `tblAttendence` auch dann protokolliert wird, wenn die Änderung nicht über den PHP-Code erfolgt:
+In der ursprünglichen Planung war vorgesehen, ergänzend zu den PHP-Schreibpfaden zwei Datenbank-Trigger für `tblAttendence` einzurichten. Auf dem produktiven SQL-Server sind Trigger jedoch nicht erlaubt. Daher erfolgt die Historisierung ausschließlich über die Anwendungslogik:
 
-- `trg_tblAttendence_after_insert`: legt nach einem `INSERT` automatisch einen Historieneintrag mit `previous_attendence = NULL` an.
-- `trg_tblAttendence_after_update`: erzeugt nach einem `UPDATE` einen Historieneintrag, sobald sich der Statuswert (`attendence`) geändert hat.
+- Jede Aktualisierung der Attendance-Endpunkte ruft `updateSingleAttendence(..., $changed_by)` auf und legt unmittelbar danach einen Datensatz in `tblAttendenceHistory` an.
+- Auch Systempfade (z. B. automatische Einträge beim Anlegen neuer Events) nutzen dieselbe Funktion und erzeugen dadurch Historieneinträge.
 
-Die Anwendung schreibt zusätzlich bei allen bestehenden Update- und Insert-Pfaden explizit einen Historieneintrag und kann – soweit verfügbar – den auslösenden Nutzer (`changed_by`) hinterlegen.
+Sollten künftig weitere Schreibpfade hinzukommen, müssen diese ebenfalls `updateSingleAttendence` verwenden oder die Historisierung analog implementieren.
 
 ## Auswertung und Reporting
 
@@ -103,5 +103,5 @@ Durch die klaren Foreign-Keys kann `tblAttendenceHistory` problemlos in bestehen
 ## Hinweise zur Datenqualität
 
 - Mehrfachänderungen innerhalb weniger Sekunden (z. B. Korrekturen) werden chronologisch festgehalten und können bei Bedarf zusammengefasst werden.
-- Trigger und Anwendung erzeugen identische Historieneinträge; doppelte Einträge werden durch die Konsistenzprüfung (Vergleich von `previous_attendence` und `new_attendence`) vermieden.
+- Doppelte Einträge werden verhindert, indem vor dem Einfügen geprüft wird, ob sich der Statuswert tatsächlich geändert hat.
 - Historische Daten lassen sich sicher archivieren, da sie keine wechselseitigen Abhängigkeiten außer den Foreign-Keys besitzen.

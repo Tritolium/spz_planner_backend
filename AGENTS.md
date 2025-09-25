@@ -773,32 +773,6 @@ ALTER TABLE `tblUserRoles`
   ADD CONSTRAINT `tblUserRoles_ibfk_2` FOREIGN KEY (`role_id`) REFERENCES `tblRoles` (`role_id`),
   ADD CONSTRAINT `tblUserRoles_ibfk_3` FOREIGN KEY (`association_id`) REFERENCES `tblAssociations` (`association_id`);
 
--- --------------------------------------------------------
-
---
--- Trigger `tblAttendence` für Historisierung
---
-
-DELIMITER $$
-CREATE TRIGGER `trg_tblAttendence_after_insert` AFTER INSERT ON `tblAttendence`
-FOR EACH ROW
-BEGIN
-  INSERT INTO `tblAttendenceHistory` (member_id, event_id, previous_attendence, new_attendence)
-  VALUES (NEW.member_id, NEW.event_id, NULL, NEW.attendence);
-END$$
-DELIMITER ;
-
-DELIMITER $$
-CREATE TRIGGER `trg_tblAttendence_after_update` AFTER UPDATE ON `tblAttendence`
-FOR EACH ROW
-BEGIN
-  IF OLD.attendence <> NEW.attendence THEN
-    INSERT INTO `tblAttendenceHistory` (member_id, event_id, previous_attendence, new_attendence)
-    VALUES (NEW.member_id, NEW.event_id, OLD.attendence, NEW.attendence);
-  END IF;
-END$$
-DELIMITER ;
-
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
