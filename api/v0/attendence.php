@@ -393,18 +393,27 @@ function updateAttendence($event_id) {
         $data->PlusOne = false;
     }
 
+    $query = "SELECT member_id FROM tblMembers WHERE api_token=:api_token";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":api_token", $_GET['api_token']);
+    $statement->execute();
+    $requesting_member = $statement->fetch(PDO::FETCH_ASSOC);
+
+    if (!$requesting_member) {
+        http_response_code(403);
+        return;
+    }
+
+    $changed_by = $requesting_member['member_id'];
+
     if (!isset($data->Member_ID)) {
-        $query = "SELECT member_id FROM tblMembers WHERE api_token=:api_token";
-        $statement = $db_conn->prepare($query);
-        $statement->bindParam(":api_token", $_GET['api_token']);
-        $statement->execute();
-        $data->Member_ID = $statement->fetch(PDO::FETCH_ASSOC)['member_id'];
+        $data->Member_ID = $changed_by;
     } else {
         // check if the requesting user is allowed to update the attendence of the member
-        $query = "SELECT association_id 
-            FROM tblEvents 
-            LEFT JOIN tblUsergroups 
-            ON tblEvents.usergroup_id = tblUsergroups.usergroup_id 
+        $query = "SELECT association_id
+            FROM tblEvents
+            LEFT JOIN tblUsergroups
+            ON tblEvents.usergroup_id = tblUsergroups.usergroup_id
             WHERE event_id=:event_id;";
         $statement = $db_conn->prepare($query);
         $statement->bindParam(":event_id", $event_id);
@@ -435,12 +444,13 @@ function updateAttendence($event_id) {
     $statement->bindParam(":attendence", $data->Attendence);
     $statement->bindValue(":plusone", $data->PlusOne ? 1 : 0);
 
-    $query = "INSERT INTO tblAttendenceHistory (member_id, event_id, previous_attendence, new_attendence, changed_at) VALUES (:member_id, :event_id, :previous_attendence, :new_attendence, NOW())";
+    $query = "INSERT INTO tblAttendenceHistory (member_id, event_id, previous_attendence, new_attendence, changed_at, changed_by) VALUES (:member_id, :event_id, :previous_attendence, :new_attendence, NOW(), :changed_by)";
     $statement_history = $db_conn->prepare($query);
     $statement_history->bindParam(":member_id", $data->Member_ID);
     $statement_history->bindParam(":event_id", $event_id);
     $statement_history->bindParam(":previous_attendence", $old_attendence);
     $statement_history->bindParam(":new_attendence", $data->Attendence);
+    $statement_history->bindParam(":changed_by", $changed_by);
 
     if ($statement->execute()) {
         $statement_history->execute();
