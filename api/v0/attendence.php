@@ -452,12 +452,19 @@ function updateAttendence($event_id) {
     $statement_history->bindParam(":new_attendence", $data->Attendence);
     $statement_history->bindParam(":changed_by", $changed_by);
 
-    if ($statement->execute()) {
-        $statement_history->execute();
-        http_response_code(200);
-    } else {
+    if (!$statement->execute()) {
         http_response_code(500);
+        return;
     }
+
+    if ($old_attendence != $data->Attendence) {
+        if (!$statement_history->execute()) {
+            http_response_code(500);
+            return;
+        }
+    }
+
+    http_response_code(200);
 }
 
 function getInstruments($usergroup_id) {
