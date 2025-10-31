@@ -65,35 +65,47 @@ if ($statement->execute()) {
     $calendar .= "END:VTIMEZONE\r\n";
 
     foreach ($events as $event) {
-        $date = date('Ymd', strtotime($event['date']));
-        $begin = $event['departure'] ? date('His', strtotime($event['departure'])) : ($event['begin'] ? date('His', strtotime($event['begin'])) : '120000');
+        $eventDate = $event['date'] ? date('Y-m-d', strtotime($event['date'])) : date('Y-m-d');
+
+        $startSource = $event['departure'] ?: ($event['begin'] ?: null);
+        $startTime = $startSource ? date('H:i:s', strtotime($startSource)) : '12:00:00';
+
+        $start = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $eventDate . ' ' . $startTime, $tzBerlin);
+        if (!$start) {
+            $start = new DateTimeImmutable($eventDate . ' ' . $startTime, $tzBerlin);
+        }
+
         // check if leave_dep and or end are set
         if ($event['leave_dep']) {
+            $leaveTime = date('H:i:s', strtotime($event['leave_dep']));
+            $end = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $eventDate . ' ' . $leaveTime, $tzBerlin);
+            if (!$end) {
+                $end = new DateTimeImmutable($eventDate . ' ' . $leaveTime, $tzBerlin);
+            }
+
             // if leave_dep is earlier than begin, add 1 day
-            if (strtotime($event['leave_dep']) < strtotime($begin)) {
-                $date_end = date('Ymd', strtotime($event['date'] . ' + 1 day'));
-                $end = new DateTime($date_end . 'T' . date('His', strtotime($event['leave_dep'])), $tzBerlin);
-            } else {
-                $end = new DateTime($date . 'T' . date('His', strtotime($event['leave_dep'])), $tzBerlin);
+            if ($end <= $start) {
+                $end = $end->add(new DateInterval('P1D'));
             }
         } else if ($event['end']) {
-            $end_time = date('His', strtotime($event['end']));
-            $end_date = date('Ymd', strtotime($event['end']));
-            $end = new DateTime($end_date . 'T' . $end_time, $tzBerlin);
+            $endDate = date('Y-m-d', strtotime($event['end']));
+            $endTime = date('H:i:s', strtotime($event['end']));
+            $end = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $endDate . ' ' . $endTime, $tzBerlin);
+            if (!$end) {
+                $end = new DateTimeImmutable($endDate . ' ' . $endTime, $tzBerlin);
+            }
         } else {
-            $end = date('His', strtotime($begin . ' + 2 hours'));
-            $end = new DateTime($date . 'T' . $end, $tzBerlin);
+            $end = $start->add(new DateInterval('PT2H'));
         }
 
         $summary = $event['type'] . ' ' . $event['location'];
         $location = $event['address'] ? $event['address'] : $event['location'];
 
-        $start = new DateTime($date . 'T' . $begin, $tzBerlin);
-        $start->setTimezone($tzUTC);
-        $begin = $start->format('Ymd\THis\Z');
+        $startUtc = $start->setTimezone($tzUTC);
+        $begin = $startUtc->format('Ymd\THis\Z');
 
-        $end->setTimezone($tzUTC);
-        $end = $end->format('Ymd\THis\Z');
+        $endUtc = $end->setTimezone($tzUTC);
+        $end = $endUtc->format('Ymd\THis\Z');
         
         $calendar .= "BEGIN:VEVENT\r\n";
         $calendar .= "UID:" . $event['event_id'] . "@spz-roenkhausen.de\r\n";
