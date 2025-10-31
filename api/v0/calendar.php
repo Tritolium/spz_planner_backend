@@ -95,7 +95,9 @@ if ($statement->execute()) {
         $end->setTimezone($tzUTC);
         $end = $end->format('Ymd\THis\Z');
         
+        $stamp = new DateTime('now', $tzUTC);
         $calendar .= "BEGIN:VEVENT\r\n";
+        $calendar .= "DTSTAMP:" . $stamp->format('Ymd\THis\Z') . "\r\n";
         $calendar .= "UID:" . $event['event_id'] . "@spz-roenkhausen.de\r\n";
         $calendar .= "DTSTART:" . $begin . "\r\n";
         $calendar .= "DTEND:" . $end . "\r\n";
