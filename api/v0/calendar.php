@@ -2,18 +2,32 @@
 
 require_once __DIR__ . '/config/database.php';
 
-header('Content-Type: text/calendar; charset=utf-8');
-
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Method Not Allowed']);
-    exit;
+switch ($_SERVER['REQUEST_METHOD']) {
+    case 'GET':
+    case 'HEAD':
+        header('Content-Type: text/calendar; charset=utf-8');
+        break;
+    case 'OPTIONS':
+        http_response_code(200);
+        header('Allow: GET, OPTIONS, HEAD');
+        exit();
+    default:
+        http_response_code(405);
+        header('Allow: GET, OPTIONS, HEAD');
+        echo json_encode(['error' => 'Method Not Allowed']);
+        exit;
 }
 
 if (!isset($_GET['api_token'])) {
     http_response_code(400);
     echo json_encode(['error' => 'Bad Request']);
     exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'HEAD') {
+    // For HEAD requests, we don't need to send the body
+    http_response_code(200);
+    exit();
 }
 
 $database = new Database();
