@@ -233,7 +233,7 @@ function getAttendence($event_id = null) {
             LEFT JOIN tblMembers t4 
             ON t2.member_id = t4.member_id 
             WHERE api_token = :api_token
-            AND state < 2) 
+            AND (state < 2 OR state = 4)) 
             AS events
             LEFT JOIN tblAttendence t3
             ON events.event_id = t3.event_id AND events.member_id = t3.member_id 
@@ -296,7 +296,7 @@ function getAttendence($event_id = null) {
                 ON users.member_id = t4.member_id 
                 AND t4.event_id = t3.event_id
                 WHERE date >= curdate()
-                AND state < 2
+                AND (state < 2 OR state = 4)
                 ORDER BY date, begin, t3.event_id, surname, forename";
 
             $statement = $db_conn->prepare($query);
