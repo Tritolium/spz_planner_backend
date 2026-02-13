@@ -264,7 +264,7 @@ function getFixedEvents() {
                 (SELECT member_id FROM tblMembers 
                 WHERE api_token = :api_token))
         AND date >= CURDATE()
-        AND state < 2
+        AND (state < 2 OR state = 4)
         AND fixed = 1
         AND evaluated = 0
         ORDER BY date ASC";
