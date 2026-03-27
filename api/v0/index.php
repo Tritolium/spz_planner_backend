@@ -38,6 +38,9 @@ switch ($request) {
     case 'events':
         require __DIR__ . '/events.php';
         break;
+    case 'heatevent':
+        require __DIR__ . '/heatevent.php';
+        break;
     case 'member':
         require __DIR__ . '/member.php';
         break;
