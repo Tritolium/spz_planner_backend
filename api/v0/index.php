@@ -41,6 +41,9 @@ switch ($request) {
     case 'heatevent':
         require __DIR__ . '/heatevent.php';
         break;
+    case 'heatweek':
+        require __DIR__ . '/heatweek.php';
+        break;
     case 'member':
         require __DIR__ . '/member.php';
         break;
