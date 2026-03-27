@@ -51,7 +51,11 @@ if (isset($heatevent_id ) && is_numeric($heatevent_id)) {
             http_response_code(200);
             exit();
         case 'GET':
-            getAllHeatEvents($api_token);
+            if (isset($_GET['current'])) {
+                getCurrentHeatEvents($api_token);
+            } else {
+                getAllHeatEvents($api_token);
+            }
             break;
         case 'POST':
             createHeatEvent($api_token);
@@ -84,6 +88,27 @@ function getHeatEvent($heatevent_id, $api_token) {
     $stmt->execute();
     $heatEvent = $stmt->fetch(PDO::FETCH_ASSOC);
     echo json_encode($heatEvent);
+}
+
+function getCurrentHeatEvents($api_token) {
+    // get current heat events where begin <= now and end >= now
+    $query = "SELECT * FROM tblHeatEvents WHERE begin <= CONVERT_TZ(NOW(), @@session.time_zone, 'Europe/Berlin') AND end >= CONVERT_TZ(NOW(), @@session.time_zone, 'Europe/Berlin')";
+    $db = new Database();
+    $conn = $db->getConnection();
+    $stmt = $conn->prepare($query);
+    $stmt->execute();
+    $heatEvents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // get upcoming heat events where begin is in the next 6 hours
+    $query = "SELECT * FROM tblHeatEvents WHERE begin > CONVERT_TZ(NOW(), @@session.time_zone, 'Europe/Berlin') AND begin <= DATE_ADD(CONVERT_TZ(NOW(), @@session.time_zone, 'Europe/Berlin'), INTERVAL 6 HOUR)";
+    $stmt = $conn->prepare($query);
+    $stmt->execute();
+    $upcomingHeatEvents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    echo json_encode([
+        'current' => $heatEvents,
+        'upcoming' => $upcomingHeatEvents
+    ]);
 }
 
 function createHeatEvent($api_token) {
