@@ -141,7 +141,7 @@ function createHeatEvent($api_token) {
 function updateHeatEvent($heatevent_id, $api_token) {
     // Implementation for updating a specific heat event
     $data = json_decode(file_get_contents("php://input"), true);
-    $query = "UPDATE tblHeatEvents SET title = :title, begin = :begin, end = :end, room_id = :room_id WHERE id = :id";
+    $query = "UPDATE tblHeatEvents SET title = :title, begin = :begin, end = :end, room_id = :room_id WHERE heatevent_id = :id";
     $db = new Database();
     $conn = $db->getConnection();
     $stmt = $conn->prepare($query);
