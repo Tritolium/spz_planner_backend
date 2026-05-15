@@ -51,6 +51,11 @@ $permissions = [
         "permission_id" => 9,
         "permission_name" => "evaluation_write",
         "description" => "Auswertungen erfassen"
+    ],
+    [   // temporary permission for heat events, will be removed when own app is done
+        "permission_id" => 501,
+        "permission_name" => "heating_read_write",
+        "description" => "Heizevents lesen und schreiben"
     ]
 ];
 
