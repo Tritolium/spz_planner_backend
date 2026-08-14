@@ -5,6 +5,8 @@ This file documents the HTTP API provided by the project. It is structured to be
 ```yaml
 endpoints:
   - path: /api/abfrage.php
+    status: legacy_ignored
+    note: The backing table no longer exists; the endpoint is kept for now and will be cleaned up later.
     methods:
       GET:
         description: Retrieve list of survey entries.
@@ -226,20 +228,24 @@ endpoints:
         responses: [204, 400, 403, 500]
   - path: /api/auth/challenge.php
     methods:
-      GET:
+      POST:
         description: Start authentication challenge.
-        responses: [200, 400]
+        body: {email: string}
+        returns: {challenge: string}
+        responses: [200, 400, 500]
   - path: /api/auth/verify.php
     methods:
       POST:
         description: Verify challenge response and issue token.
-        body: {challenge: string}
-        responses: [200, 403]
+        body: {email: string, response: string}
+        returns: {token: string}
+        responses: [200, 400, 401, 500]
   - path: /api/auth/logout.php
     methods:
       POST:
         description: Invalidate an API token.
-        responses: [200]
+        body: {email: string, token: string}
+        responses: [200, 400, 401, 500]
   - path: /api/v0/analytics/{device_uuid}
     methods:
       POST:
@@ -259,7 +265,7 @@ endpoints:
         query: {api_token: string, xgboost?: bool}
         responses: [200, 204, 403, 500]
       PATCH:
-        description: Update attendance for an event.
+        description: Update attendance for an event; changes are logged to tblAttendenceHistory when the attendance value changes.
         query: {api_token: string}
         body: {Member_ID?: int, Attendence: int, PlusOne?: bool}
         responses: [200, 403, 500]
@@ -318,6 +324,13 @@ endpoints:
         query: {api_token: string}
         body: member or assignment payload
         responses: [200, 400, 500]
+  - path: /api/v0/member/{id}/associationassignment
+    methods:
+      PUT:
+        description: Update association assignments for a member.
+        query: {api_token: string}
+        body: {"[association_id]": {assign: bool, instrument?: string}}
+        responses: [204, 500]
   - path: /api/v0/p_evaluation
     methods:
       GET:
