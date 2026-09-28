@@ -10,9 +10,9 @@ The following SQL schema defines the database tables and constraints used by the
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Erstellungszeit: 23. Sep 2025 um 14:31
+-- Erstellungszeit: 17. Aug 2026 um 11:35
 -- Server-Version: 10.5.19-MariaDB-0+deb11u2
--- PHP-Version: 8.1.32
+-- PHP-Version: 8.1.34
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -91,8 +91,25 @@ CREATE TABLE `tblAttendence` (
   `event_id` int(11) NOT NULL,
   `attendence` int(11) NOT NULL DEFAULT -1,
   `plusone` tinyint(1) NOT NULL DEFAULT 0,
+  `arrival` int(11) NOT NULL DEFAULT 0,
   `timestamp` datetime NOT NULL DEFAULT current_timestamp(),
   `evaluation` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `tblAttendenceHistory`
+--
+
+CREATE TABLE `tblAttendenceHistory` (
+  `history_id` int(11) NOT NULL,
+  `member_id` int(11) NOT NULL,
+  `event_id` int(11) NOT NULL,
+  `previous_attendence` int(11) DEFAULT NULL,
+  `new_attendence` int(11) NOT NULL,
+  `changed_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `changed_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 -- --------------------------------------------------------
@@ -207,6 +224,7 @@ CREATE TABLE `tblEvents` (
   `accepted` tinyint(1) NOT NULL DEFAULT 1 COMMENT 'ersetzt durch state, entfernen am 01.07.2025',
   `plusone` tinyint(1) NOT NULL DEFAULT 0,
   `clothing` int(11) NOT NULL DEFAULT 0,
+  `transport` int(11) NOT NULL DEFAULT 0,
   `usergroup_id` int(11) DEFAULT NULL,
   `evaluated` tinyint(1) NOT NULL DEFAULT 0,
   `fixed` tinyint(1) NOT NULL DEFAULT 0,
@@ -223,6 +241,20 @@ CREATE TABLE `tblEvents` (
 CREATE TABLE `tblFeedback` (
   `feedback_id` int(11) NOT NULL,
   `content` varchar(511) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `tblHeatEvents`
+--
+
+CREATE TABLE `tblHeatEvents` (
+  `heatevent_id` int(11) NOT NULL,
+  `title` varchar(64) NOT NULL,
+  `begin` datetime NOT NULL,
+  `end` datetime NOT NULL,
+  `room_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 -- --------------------------------------------------------
@@ -416,6 +448,15 @@ ALTER TABLE `tblAttendence`
   ADD UNIQUE KEY `member_id` (`member_id`,`event_id`);
 
 --
+-- Indizes für die Tabelle `tblAttendenceHistory`
+--
+ALTER TABLE `tblAttendenceHistory`
+  ADD PRIMARY KEY (`history_id`),
+  ADD KEY `member_id` (`member_id`),
+  ADD KEY `event_id` (`event_id`),
+  ADD KEY `changed_by` (`changed_by`);
+
+--
 -- Indizes für die Tabelle `tblAuth`
 --
 ALTER TABLE `tblAuth`
@@ -467,6 +508,12 @@ ALTER TABLE `tblEvents`
 --
 ALTER TABLE `tblFeedback`
   ADD PRIMARY KEY (`feedback_id`);
+
+--
+-- Indizes für die Tabelle `tblHeatEvents`
+--
+ALTER TABLE `tblHeatEvents`
+  ADD PRIMARY KEY (`heatevent_id`);
 
 --
 -- Indizes für die Tabelle `tblLogin`
@@ -558,6 +605,12 @@ ALTER TABLE `tblAnalytics`
 --
 ALTER TABLE `tblAssociations`
   MODIFY `association_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT für Tabelle `tblAttendenceHistory`
+--
+ALTER TABLE `tblAttendenceHistory`
+  MODIFY `history_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT für Tabelle `tblDatetemplates`
@@ -668,6 +721,14 @@ ALTER TABLE `tblAssociations`
 ALTER TABLE `tblAttendence`
   ADD CONSTRAINT `tblAttendence_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `tblMembers` (`member_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   ADD CONSTRAINT `tblAttendence_ibfk_2` FOREIGN KEY (`event_id`) REFERENCES `tblEvents` (`event_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+--
+-- Constraints der Tabelle `tblAttendenceHistory`
+--
+ALTER TABLE `tblAttendenceHistory`
+  ADD CONSTRAINT `tblAttendenceHistory_changed_by` FOREIGN KEY (`changed_by`) REFERENCES `tblMembers` (`member_id`) ON DELETE SET NULL ON UPDATE NO ACTION,
+  ADD CONSTRAINT `tblAttendenceHistory_event` FOREIGN KEY (`event_id`) REFERENCES `tblEvents` (`event_id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  ADD CONSTRAINT `tblAttendenceHistory_member` FOREIGN KEY (`member_id`) REFERENCES `tblMembers` (`member_id`) ON DELETE CASCADE ON UPDATE NO ACTION;
 
 --
 -- Constraints der Tabelle `tblDatetemplates`
