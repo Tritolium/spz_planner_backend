@@ -57,19 +57,30 @@ function predictAttendencePerMember($member_id, $event_id) {
     *
     * Adjust the limit over time to get a better prediction.
     */
+
+    $query = "SELECT category FROM tblEvents WHERE event_id=:event_id";
+    $statement = $db_conn->prepare($query);
+    $statement->bindParam(":event_id", $event_id);
+    if (!$statement->execute()) {
+        http_response_code(500);
+        return;
+    }
+    $category = $statement->fetchColumn();
+
+
     $query = "SELECT evaluation, COUNT(*) FROM 
         (SELECT evaluation FROM tblAttendence 
         LEFT JOIN tblEvents 
         ON tblAttendence.event_id=tblEvents.event_id 
         WHERE member_id=:member_id 
         AND evaluation IS NOT NULL 
-        AND category=(SELECT category FROM tblEvents WHERE event_id=:event_id)
+        AND category=:category
         ORDER BY date DESC
         LIMIT 10) att 
         GROUP BY evaluation";
     $statement = $db_conn->prepare($query);
     $statement->bindParam(":member_id", $member_id);
-    $statement->bindParam(":event_id", $event_id);
+    $statement->bindParam(":category", $category);
 
     if (!$statement->execute()) {
         http_response_code(500);
@@ -110,7 +121,13 @@ function predictAttendencePerMember($member_id, $event_id) {
         return [$prob_attending, $prob_missing, $prob_signout, $prob_missing_with_attendence];
     }
 
-    if ($signout / ($okay + $not_okay + $signout) >= 0.9) {
+    if ($category === "practice") {
+        $signout_threshold = 0.7;
+    } else {
+        $signout_threshold = 0.9;
+    }
+
+    if ($signout / ($okay + $not_okay + $signout) >= $signout_threshold) {
         $prob_signout = 1;
     } else if ($not_okay / ($not_okay + $okay + $signout) >= 0.1) {
         $prob_missing = 1;
